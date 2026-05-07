@@ -50,8 +50,8 @@ public class LaurensBot2 : IPlayerBot
 
     public HashSet<(int x, int y)> GetBulletPath((int x, int y) pos, TurretDirection dir)
     {
-        int dx = (dir.HasFlag(TurretDirection.West) ? 1 : 0) + (dir.HasFlag(TurretDirection.East) ? -1 : 0);
-        int dy = (dir.HasFlag(TurretDirection.South) ? -1 : 0) + (dir.HasFlag(TurretDirection.North) ? 1 : 0);
+        int dx = (dir.HasFlag(TurretDirection.East) ? 1 : 0) + (dir.HasFlag(TurretDirection.West) ? -1 : 0);
+        int dy = (dir.HasFlag(TurretDirection.North) ? -1 : 0) + (dir.HasFlag(TurretDirection.South) ? 1 : 0);
 
         var path = new HashSet<(int x, int y)>();
         for (int i = 0; i < 7; i++)
@@ -74,7 +74,7 @@ public class LaurensBot2 : IPlayerBot
             // Ignore tanks that are further than 7 tiles away
             if (Math.Abs(tank.X - _myTank.X) > 8 || Math.Abs(tank.Y - _myTank.Y) > 8)
                 continue;
-            // Edit this code so it takes into account that the tank can move in 4 directions for 1 tile before firing
+            
             dangerZone.UnionWith(CalculateFiringZone((tank.X, tank.Y))); // Current postion of enemy tank
             dangerZone.UnionWith(CalculateFiringZone((tank.X, tank.Y - 1))); // Enemy tank moves north
             dangerZone.UnionWith(CalculateFiringZone((tank.X + 1, tank.Y))); // Enemy tank moves east
@@ -155,25 +155,25 @@ public class LaurensBot2 : IPlayerBot
 
     public void MoveWest()
     {
-        _currentContext.MoveTank(Direction.East);
+        _currentContext.MoveTank(Direction.West);
         _lastDirection = Direction.West;
     }
 
     public void MoveEast()
     {
-        _currentContext.MoveTank(Direction.West);
+        _currentContext.MoveTank(Direction.East);
         _lastDirection = Direction.East;
     }
 
     public void MoveNorth()
     {
-        _currentContext.MoveTank(Direction.South);
+        _currentContext.MoveTank(Direction.North);
         _lastDirection = Direction.North;
     }
 
     public void MoveSouth()
     {
-        _currentContext.MoveTank(Direction.North);
+        _currentContext.MoveTank(Direction.South);
         _lastDirection = Direction.South;
     }
 
