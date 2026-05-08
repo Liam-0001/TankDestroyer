@@ -8,7 +8,7 @@ on:
 
 env:
   DEPLOY_BRANCH: Pipeline-test-branch
-  GODOT_VERSION: 4.6.2
+  GODOT_VERSION: 4.2.2
 
 jobs:
   build:
@@ -52,22 +52,24 @@ jobs:
   godot:
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
     permissions:
       contents: write
 
     steps:
       - uses: actions/checkout@v4
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ env.DEPLOY_BRANCH }}
 
       - name: Configure git
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
       - name: Setup Godot
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: |
           wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
           unzip Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
@@ -75,21 +77,26 @@ jobs:
           chmod +x /usr/local/bin/godot
 
       - name: Setup Godot export templates
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: |
           mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
           wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
           unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
 
       - name: Export Godot project
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: |
           mkdir -p GodotBuild
-          godot --headless --export-debug "Windows Desktop" GodotBuild/TankDestroyer.exe
+          godot --headless --export-release "Windows Desktop" GodotBuild/TankDestroyer.exe
 
       - name: Stage Godot build
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: git add -f GodotBuild
 
       - name: Commit Godot build
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: git diff --quiet && git diff --staged --quiet || git commit -m "Update Godot build at $(TZ='Europe/Brussels' date +'%Y-%m-%d %H:%M:%S')"
 
       - name: Push Godot build
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: git push origin HEAD:${{ env.DEPLOY_BRANCH }}
