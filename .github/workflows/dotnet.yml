@@ -43,8 +43,8 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore All.slnx
 
-      - name: Build API
-        run: dotnet build TankDestroyer.API/TankDestroyer.API.csproj -c Release
+      - name: Build Console
+        run: dotnet build TankDestroyer.Game.Console/TankDestroyer.Game.Console.csproj -c Release
 
       - name: Build All
         run: dotnet build --no-restore -c Release
