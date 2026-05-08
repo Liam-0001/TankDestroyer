@@ -6,12 +6,12 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "HDJO.Bot/1.0.0": {
+      "Menno.Bot/1.0.0": {
         "dependencies": {
           "TankDestroyer.API": "1.0.0.0"
         },
         "runtime": {
-          "HDJO.Bot.dll": {}
+          "Menno.Bot.dll": {}
         }
       },
       "TankDestroyer.API/1.0.0.0": {
@@ -25,7 +25,7 @@
     }
   },
   "libraries": {
-    "HDJO.Bot/1.0.0": {
+    "Menno.Bot/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
