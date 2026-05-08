@@ -135,9 +135,9 @@ jobs:
             godot --headless --path Game --editor --convert-res --quit || true
             godot --headless --path Game --import
 
-        - name: Export Godot project
-          if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
-          run: |
+      - name: Export Godot project
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
+        run: |
               mkdir -p Build
               godot --headless --path Game --export-debug "Windows Desktop" $(pwd)/Build/TankDestroyer.exe
             
