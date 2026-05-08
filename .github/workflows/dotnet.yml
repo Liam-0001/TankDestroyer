@@ -8,7 +8,7 @@ on:
 
 env:
   DEPLOY_BRANCH: Pipeline-test-branch
-  GODOT_VERSION: 4.2.2
+  GODOT_VERSION: 4.6.2
 
 jobs:
   build:
