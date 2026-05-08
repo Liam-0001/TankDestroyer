@@ -125,12 +125,27 @@ jobs:
       - name: Godot C# Project Prep
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-          dotnet restore All.slnx
+          cd Game
           
-          godot --headless --path Game --editor --quit-after 50 || echo "Editor initialization finished"
+          # 1. Schoon eventuele oude troep op die uit de artifact komt
+          rm -rf .godot/mono
+          
+          # 2. Herstel .NET dependencies
+          dotnet restore
+          
+          # 3. Forceer de generatie van de 'glue' metadata. 
+          # We draaien de editor headless en geven hem wat tijd om alles te indexeren.
+          godot --headless --editor --quit-after 100 || echo "Editor init done"
+          
+          # 4. Bouw de solution specifiek via de Godot CLI
+          godot --headless --build-solutions --quit
+          cd ..
 
-          godot --headless --path Game --build-solutions --quit
-
+      - name: Debug DLL existence
+        run: |
+          echo "Checking for compiled assemblies:"
+          find Game/.godot/mono/temp/bin -name "*.dll" || echo "No DLLs found in mono temp"
+        
       - name: Import and Export
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
