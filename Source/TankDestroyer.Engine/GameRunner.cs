@@ -19,7 +19,7 @@ public class GameRunner
         _game = new Game(world, playerBots);
         _ammoService = new AmmoService(_game);
         GameTurn turn = new GameTurn();
-        turn.World = _game.World;
+        turn.World = _game.World.Clone();
         turn.Tanks = _game.Tanks.Select(c => c.Clone()).ToArray();
         turn.Actions = Array.Empty<TankAction>();
         turn.Bullets = Array.Empty<Bullet>();
@@ -73,7 +73,7 @@ public class GameRunner
         }
 
         GameTurn turn = new GameTurn();
-        turn.World = _game.World;
+        turn.World = _game.World.Clone();
         turn.Tanks = _game.Tanks.Select(c => c.Clone()).ToArray();
         turn.Actions = turnActions.ToArray();
         turn.Bullets = _game.Bullets.Select(c => c.Clone()).ToArray();
@@ -104,15 +104,18 @@ public class GameRunner
             {
                 if (tankAtCell.Health > 0)
                 {
-                    var cellType = _game.World.GetTile(cellX, cellY).TileType;
+                    var tileAtTank = _game.World.GetTile(cellX, cellY);
+                    var cellType = tileAtTank.TileType;
 
                     switch (cellType)
                     {
                         case TileType.Tree:
                             tankAtCell.TakeDamage(25);
+                            tileAtTank.TileType = TileType.Grass;
                             break;
                         case TileType.Building:
                             tankAtCell.TakeDamage(50);
+                            tileAtTank.TileType = TileType.Grass;
                             break;
                         default:
                             tankAtCell.TakeDamage(75);
@@ -134,6 +137,7 @@ public class GameRunner
             if (cellTypeAtTile.TileType == TileType.Tree)
             {
                 bullet.Explode = true;
+                cellTypeAtTile.TileType = TileType.Grass;
                 RemoveBulletAt(bullet, cellX, cellY);
                 break;
             }
@@ -142,6 +146,7 @@ public class GameRunner
                 (cellX != bullet.StartingX || cellY != bullet.StartingY))
             {
                 bullet.Explode = true;
+                cellTypeAtTile.TileType = TileType.Grass;
                 RemoveBulletAt(bullet, cellX, cellY);
                 break;
             }
