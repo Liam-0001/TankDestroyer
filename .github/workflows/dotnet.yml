@@ -7,7 +7,7 @@ on:
     branches: [ "master", "Pipeline-test-branch" ]
 
 env:
-  DEPLOY_BRANCH: master
+  DEPLOY_BRANCH: Pipeline-test-branch
   GODOT_VERSION: 4.6.2
   TARGET_REPO: Liam-0001/TankDestroyer
 
