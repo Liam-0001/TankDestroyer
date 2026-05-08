@@ -8,13 +8,13 @@
     ".NETCoreApp,Version=v10.0": {
       "ANSU.Bot/1.0.0": {
         "dependencies": {
-          "TankDestroyer.API": "1.0.0.0"
+          "TankDestroyer.API.Reference": "1.0.0.0"
         },
         "runtime": {
           "ANSU.Bot.dll": {}
         }
       },
-      "TankDestroyer.API/1.0.0.0": {
+      "TankDestroyer.API.Reference/1.0.0.0": {
         "runtime": {
           "TankDestroyer.API.dll": {
             "assemblyVersion": "1.0.0.0",
@@ -30,7 +30,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "TankDestroyer.API/1.0.0.0": {
+    "TankDestroyer.API.Reference/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
