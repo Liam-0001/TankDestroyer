@@ -17,6 +17,18 @@ public class World : IWorld
         return Tiles[(y * Width) + x];
     }
 
+    public World Clone()
+    {
+        return new World()
+        {
+            Name = Name,
+            Width = Width,
+            Height = Height,
+            SpawnPoints = SpawnPoints.ToArray(),
+            Tiles = Tiles.Select(t => new Tile { X = t.X, Y = t.Y, TileType = t.TileType }).ToArray()
+        };
+    }
+
     public static World GenerateRandom(int height, int width)
     {
         var tiles = new Tile[height * width];
