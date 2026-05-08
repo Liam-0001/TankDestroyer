@@ -5,7 +5,7 @@ public class CollectMapsService: ICollectMapsService
     public  World[] LoadMaps(string folder)
     {
         List<World> worlds = new();
-        foreach (var filePath in Directory.EnumerateFiles(folder, "*.map"))
+        foreach (var filePath in Directory.EnumerateFiles(folder, "*.map", SearchOption.AllDirectories))
         {
             worlds.Add(World.LoadFromFile(filePath));
         }

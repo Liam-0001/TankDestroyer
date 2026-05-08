@@ -26,7 +26,7 @@ public class CollectBotsService: ICollectBotService
         List<Type> allBots = new();
         var containingAssembly = typeof(IPlayerBot).Assembly;
         var typeOfPlayerBot = typeof(IPlayerBot);
-        foreach (var dllFile in Directory.GetFiles(folder, "*.Bot.dll"))
+        foreach (var dllFile in Directory.GetFiles(folder, "*.Bot.dll", SearchOption.AllDirectories))
         {
             AnsiConsole.MarkupLine($"Load from dll: [blue]{dllFile}[/]");
             try
