@@ -112,6 +112,10 @@ jobs:
         run: |
           godot --headless --path Game --export-debug "Windows Desktop" ../Build/TankDestroyer.exe
 
+      - name: List Build folder
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
+        run: ls -la Build/ && ls -la Build/data_TankDestroyer_windows_x86_64/ || echo "data folder not found"
+      
       - name: Stage Godot build
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: git add -f Build
