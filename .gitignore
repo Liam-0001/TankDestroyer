@@ -1,7 +1,6 @@
 # Build results
 bin/
 obj/
-Build/
 
 # NuGet packages and cache
 *.nuget.props
