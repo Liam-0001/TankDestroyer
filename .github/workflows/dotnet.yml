@@ -122,25 +122,23 @@ jobs:
           unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
           mv templates/* ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
 
-      - name: Prepare Godot C# Projects
+      - name: Godot C# Project Prep
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-            godot --headless --path Game --build-solutions --quit || echo "Build solutions exited with codes"
-
-      - name: Godot C# Build & Import
-        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
-        run: |
-            cd Game && dotnet build -c Release && cd ..          
-            godot --headless --path Game --build-solutions --quit || echo "Build solutions finished"
-            godot --headless --path Game --editor --convert-res --quit || true
-            godot --headless --path Game --import
-
-      - name: Export Godot project
-        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
-        run: |
-              mkdir -p Build
-              godot --headless --path Game --export-debug "Windows Desktop" $(pwd)/Build/TankDestroyer.exe
+            cd Game
             
+            dotnet restore
+            
+            godot --headless --build-solutions --quit || echo "Build finished with warnings"
+            cd ..
+
+      - name: Import and Export
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
+        run: |
+                godot --headless --path Game --import
+                
+                mkdir -p Build
+                godot --headless --path Game --export-debug "Windows Desktop" $(pwd)/Build/TankDestroyer.exe
       - name: List Build folder
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: ls -la Build/ && ls -la Build/data_TankDestroyer_windows_x86_64/ || echo "data folder not found"
