@@ -107,8 +107,8 @@ jobs:
           mv templates/* ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
 
       - name: Import Godot assets & Generate .NET Glue
-          if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
-          run: |
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
+        run: |
             godot --headless --path Game --editor --quit || true
             godot --headless --path Game --import
 
