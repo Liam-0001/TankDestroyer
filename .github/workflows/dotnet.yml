@@ -106,18 +106,17 @@ jobs:
           unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
           mv templates/* ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
 
-      - name: Import Godot assets
-        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
-        run: |
-          mkdir -p Game/.godot/editor
-          mkdir -p Game/.godot/imported
-          godot --headless --path Game --import
+      - name: Import Godot assets & Generate .NET Glue
+          if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
+          run: |
+            godot --headless --path Game --editor --quit || true
+            godot --headless --path Game --import
 
       - name: Export Godot project
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-          godot --headless --path Game --export-debug "Windows Desktop" ../Build/TankDestroyer.exe
-
+          dotnet build Game/*.csproj -c Debug
+          godot --headless --path Game --export-debug "Windows Desktop" ../Build/T
       - name: List Build folder
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: ls -la Build/ && ls -la Build/data_TankDestroyer_windows_x86_64/ || echo "data folder not found"
