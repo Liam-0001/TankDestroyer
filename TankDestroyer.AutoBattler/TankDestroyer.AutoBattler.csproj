@@ -11,9 +11,21 @@
     <PackageReference Include="Spectre.Console" Version="0.55.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Source\TankDestroyer.API\TankDestroyer.API.csproj" />
-    <ProjectReference Include="..\Source\TankDestroyer.Engine\TankDestroyer.Engine.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="TankDestroyer.API">
+			<HintPath>..\Build\TankDestroyer.API.dll</HintPath>
+		</Reference>
+		<Reference Include="TankDestroyer.Engine">
+			<HintPath>..\Build\TankDestroyer.Engine.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Spectre.Console" Version="0.55.2" />
+	</ItemGroup>
+	<PropertyGroup>
+		<OutputPath>..\Build</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	</PropertyGroup>
 </Project>

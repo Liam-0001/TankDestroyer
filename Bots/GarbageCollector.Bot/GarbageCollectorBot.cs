@@ -1,4 +1,3 @@
-using System.IO;
 using TankDestroyer.API;
 
 namespace GarbageCollector.Bot;
@@ -48,6 +47,7 @@ public class GarbageCollectorBot : IPlayerBot
 
     private static StreamWriter? InitLog()
     {
+        return null;
 #if DEBUG
         bool fileExists = File.Exists(LogPath);
         var writer = new StreamWriter(LogPath, append: true) { AutoFlush = true };
