@@ -125,21 +125,19 @@ jobs:
       - name: Godot C# Project Prep
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-          cd Game
-          
-          # 1. Schoon eventuele oude troep op die uit de artifact komt
-          rm -rf .godot/mono
-          
-          # 2. Herstel .NET dependencies
-          dotnet restore
-          
-          # 3. Forceer de generatie van de 'glue' metadata. 
-          # We draaien de editor headless en geven hem wat tijd om alles te indexeren.
-          godot --headless --editor --quit-after 100 || echo "Editor init done"
-          
-          # 4. Bouw de solution specifiek via de Godot CLI
-          godot --headless --build-solutions --quit
-          cd ..
+          c# 1. Restore de volledige solution zodat ALLE projecten (ook Logica) gelinkt zijn
+          dotnet restore All.slnx
+
+          # 2. Bouw de logica projecten eerst handmatig naar de shared build folder
+          dotnet build Source/TankDestroyer.API/TankDestroyer.API.csproj -c Release
+          dotnet build Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj -c Release
+
+          # 3. Forceer Godot om de 'Glue' te genereren. 
+          # Omdat de logica nu gebouwd is, kan Godot de referenties resolven.
+          godot --headless --path Game --editor --quit-after 200 || echo "Editor init done"
+
+          # 4. Bouw de solution vanuit Godot context
+          godot --headless --path Game --build-solutions --quit
 
       - name: Debug DLL existence
         run: |
