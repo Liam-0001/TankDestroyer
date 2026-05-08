@@ -4,11 +4,12 @@ on:
   push:
     branches: [ "master", "Pipeline-test-branch" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "Pipeline-test-branch" ]
 
 env:
-  DEPLOY_BRANCH: Pipeline-test-branch
+  DEPLOY_BRANCH: master
   GODOT_VERSION: 4.6.2
+  TARGET_REPO: Liam-0001/TankDestroyer
 
 jobs:
   build:
@@ -38,24 +39,25 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Stage .NET build
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: git add -f Build
 
       - name: Commit .NET build
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: git diff --quiet && git diff --staged --quiet || git commit -m "Update .NET build at $(TZ='Europe/Brussels' date +'%Y-%m-%d %H:%M:%S')"
 
       - name: Push .NET build
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: git push origin HEAD:${{ env.DEPLOY_BRANCH }}
 
       - name: Upload .NET build
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         uses: actions/upload-artifact@v4
         with:
           name: dotnet-build
           path: Build/
           retention-days: 1
+
   godot:
     runs-on: ubuntu-latest
     needs: build
@@ -64,26 +66,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ env.DEPLOY_BRANCH }}
 
       - name: Download .NET build
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         uses: actions/download-artifact@v4
         with:
           name: dotnet-build
           path: Build/
-          
+
       - name: Configure git
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
       - name: Setup Godot
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
           wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
           unzip Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
@@ -91,28 +93,33 @@ jobs:
           chmod +x /usr/local/bin/godot
 
       - name: Setup Godot export templates
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-            mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-            wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
-            unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
-            mv templates/* ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
-            
+          mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
+          unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
+
+      - name: Import Godot assets
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
+        run: |
+          mkdir -p Game/.godot/editor
+          mkdir -p Game/.godot/imported
+          godot --headless --path Game --import
+
       - name: Export Godot project
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-            mkdir -p Game/.godot/editor
-            mkdir -p Game/.godot/imported
-            godot --headless --path Game --export-debug "Windows Desktop" ../Build/TankDestroyer.exe
+          godot --headless --path Game --export-debug "Windows Desktop" ../Build/TankDestroyer.exe
 
       - name: Stage Godot build
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: git add -f Build
 
       - name: Commit Godot build
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: git diff --quiet && git diff --staged --quiet || git commit -m "Update Godot build at $(TZ='Europe/Brussels' date +'%Y-%m-%d %H:%M:%S')"
 
       - name: Push Godot build
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: git push origin HEAD:${{ env.DEPLOY_BRANCH }}
