@@ -39,19 +39,18 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Prepare Solution and Dependencies
+        run: |
+            chmod +x ./AddProjectsToSolution.sh
+            ./AddProjectsToSolution.sh All.slnx
 
-      - name: Restore dependencies
-        run: dotnet restore All.slnx
-
-      - name: Build Solution
-        run: dotnet build All.slnx --no-restore -c Release
+      - name: Build All            
+        run: dotnet build All.slnx -c Release --no-restore -p:BuildProjectReferences=true
 
       - name: Copy config to Build
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-          cp Game/config.json Build/config.json
+          cp TankDestroyer.Game.Console/config.json Build/config.json
           cp -r Maps Build/Maps
 
       - name: Stage .NET build
