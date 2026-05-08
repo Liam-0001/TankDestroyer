@@ -39,14 +39,21 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-      - name: Prepare Solution and Dependencies
+      - name: Build API First (Core Dependency)
+        run: |
+            dotnet build Source/TankDestroyer.API/TankDestroyer.API.csproj \
+            -c Release \
+            -o Build/ \
+            --force
+
+      - name: Run Solution Script
         run: |
             chmod +x ./AddProjectsToSolution.sh
             ./AddProjectsToSolution.sh All.slnx
 
-      - name: Build All            
-        run: dotnet build All.slnx -c Release --no-restore -p:BuildProjectReferences=true
-
+      - name: Build Remaining Projects
+        run: dotnet build All.slnx -c Release --no-restore
+            
       - name: Copy config to Build
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |

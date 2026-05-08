@@ -23,12 +23,20 @@ if [[ ${#projects[@]} -eq 0 ]]; then
 fi
 
 printf 'Adding %s project(s) to solution "%s"...\n' "${#projects[@]}" "$solution_file"
+# In je loop waar je projecten toevoegt:
 for project_path in "${projects[@]}"; do
-  project_path="${project_path#./}"
-  printf '  Adding %s\n' "$project_path"
-  # Voeg project toe en negeer fouten als het al bestaat
-  dotnet sln "$solution_file" add "$project_path" || true
+  # Voeg toe aan solution
+  dotnet sln "$solution_file" add "$project_path"
+
+  # Als het een bot is, dwing de referentie naar de API
+  if [[ "$project_path" == *"Bots"* ]]; then
+    echo "Fixing references for $project_path"
+    # Gebruik het relatieve pad naar je API project
+    dotnet add "$project_path" reference Source/TankDestroyer.API/TankDestroyer.API.csproj || true
+  fi
 done
+
+
 
 printf 'Restoring dependencies for the entire solution...\n'
 dotnet restore "$solution_file"
