@@ -4,46 +4,74 @@ namespace TankDestroyer.AutoBattler;
 
 public class StalemateDetector
 {
-    private readonly int _windowSize;
-    private readonly int _threshold;
-    private readonly Dictionary<int, Queue<(int X, int Y)>> _positionHistory = new();
+    private readonly Dictionary<int, Queue<(int X, int Y)>> _history = new();
+    private static int MaxHistory => Program.StalemateWindowSize * 10;
+    private static int ConfinedThreshold => Program.StalematePositionThreshold + 1; // 3 positions for a-b-c loops
 
-    public StalemateDetector(int windowSize, int threshold)
+    public bool IsStalemate(Tank[] tanks)
     {
-        _windowSize = windowSize;
-        _threshold = threshold;
-    }
-
-    public void Track(Tank[] tanks)
-    {
+        bool anyActive = false;
         foreach (var tank in tanks)
         {
             if (tank.Destroyed)
-                continue;
-
-            if (!_positionHistory.TryGetValue(tank.OwnerId, out var history))
             {
-                history = new Queue<(int X, int Y)>();
-                _positionHistory[tank.OwnerId] = history;
+                _history.Remove(tank.OwnerId);
+                continue;
             }
 
-            history.Enqueue((tank.X, tank.Y));
-            if (history.Count > _windowSize)
-                history.Dequeue();
+            anyActive = true;
+            if (!_history.TryGetValue(tank.OwnerId, out var queue))
+                _history[tank.OwnerId] = queue = new Queue<(int, int)>();
+
+            queue.Enqueue((tank.X, tank.Y));
+            if (queue.Count > MaxHistory) queue.Dequeue();
         }
+
+        if (!anyActive) return false;
+
+        // Count tanks currently "moving" (more than 1 unique position in the long window)
+        int movingCount = 0;
+        foreach (var queue in _history.Values)
+        {
+            if (GetUniqueCount(queue, MaxHistory) > 1)
+                movingCount++;
+        }
+
+        // If only one tank is moving, we use a 10x larger window to filter out slow progress
+        int window = (movingCount == 1) ? MaxHistory : Program.StalemateWindowSize;
+
+        foreach (var tank in tanks)
+        {
+            if (tank.Destroyed) continue;
+            
+            var queue = _history[tank.OwnerId];
+            if (queue.Count < window) return false;
+
+            if (GetUniqueCount(queue, window) > ConfinedThreshold)
+                return false;
+        }
+
+        return true;
     }
 
-    public bool IsStalemate(Tank[] tanks, Bullet[] bullets)
+    private static int GetUniqueCount(Queue<(int X, int Y)> history, int window)
     {
-        if (bullets.Length > 0)
-            return false;
+        int skip = Math.Max(0, history.Count - window);
+        (int X, int Y)? p1 = null, p2 = null, p3 = null;
+        
+        int i = 0;
+        foreach (var p in history)
+        {
+            if (i++ < skip) continue;
 
-        var survivors = tanks.Where(t => !t.Destroyed).ToList();
-        if (survivors.Count == 0)
-            return false;
-
-        return survivors.All(t =>
-            _positionHistory.TryGetValue(t.OwnerId, out var h) && h.Count == _windowSize && h.Distinct().Count() <= _threshold
-        );
+            if (p1 == null) p1 = p;
+            else if (p != p1 && p2 == null) p2 = p;
+            else if (p != p1 && p != p2 && p3 == null) p3 = p;
+            else if (p != p1 && p != p2 && p != p3) return 4;
+        }
+        
+        if (p3 != null) return 3;
+        if (p2 != null) return 2;
+        return p1 != null ? 1 : 0;
     }
 }

@@ -10,7 +10,7 @@ namespace TankDestroyer.AutoBattler;
 class Program
 {
     public const int MaxTurnsForStaleMate = 200;
-    public const int StalemateWindowSize = 10;
+    public const int StalemateWindowSize = 20;
     public const int StalematePositionThreshold = 2;
     public static ConcurrentBag<GameResult> GameResults = [];
     private static readonly TextWriter OriginalOut = Console.Out;
@@ -174,7 +174,7 @@ class Program
         int turnCount = 0;
         bool hasCrashed = false;
         bool isStalemate = false;
-        var detector = new StalemateDetector(StalemateWindowSize, StalematePositionThreshold);
+        var detector = new StalemateDetector();
 
         try
         {
@@ -183,9 +183,7 @@ class Program
                 runner.DoTurn();
 
                 var currentTanks = runner.GetTanks();
-                detector.Track(currentTanks);
-
-                if (turnCount >= StalemateWindowSize && detector.IsStalemate(currentTanks, runner.GetBullets()))
+                if (detector.IsStalemate(currentTanks))
                 {
                     isStalemate = true;
                     break;

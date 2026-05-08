@@ -32,7 +32,7 @@ public class ResultRenderer
 
     private void PrintStatsTable(IEnumerable<GameResult> results)
     {
-        var botStats = new Dictionary<string, (int Wins, int Losses, int Draws, int Stalemates, int Crashes, string Color)>();
+        var botStats = new Dictionary<string, (int Wins, int Losses, int Draws, int Stalemates, int Crashes, string Color, string Creator)>();
 
         foreach (var result in results)
         {
@@ -43,16 +43,21 @@ public class ResultRenderer
             {
                 if (!botStats.ContainsKey(botInfo.Name))
                 {
-                    botStats[botInfo.Name] = (0, 0, 0, 0, 0, botInfo.Color);
+                    botStats[botInfo.Name] = (0, 0, 0, 0, 0, botInfo.Color, botInfo.Creator);
                 }
 
                 var stats = botStats[botInfo.Name];
                 var tank = result.Bots.FirstOrDefault(t => t.OwnerId == botInfo.OwnerId);
 
+                
                 if (result.HasCrashed)
                 {
                     stats.Crashes++;
                     stats.Losses++;
+                }
+                else if (tank != null && result.Bots.All(b => b.Destroyed))
+                {
+                    stats.Draws++;
                 }
                 else if (isStalemate && tank != null && !tank.Destroyed)
                 {
@@ -65,10 +70,6 @@ public class ResultRenderer
                 else if (tank == null || tank.Destroyed)
                 {
                     stats.Losses++;
-                }
-                else
-                {
-                    stats.Draws++;
                 }
 
                 botStats[botInfo.Name] = stats;
@@ -92,7 +93,7 @@ public class ResultRenderer
             }
 
             table.AddRow(
-                $"[{color}]{Markup.Escape(entry.Key)}[/]",
+                $"[{color}]{Markup.Escape(entry.Key)}[/] by {Markup.Escape(entry.Value.Creator)}",
                 entry.Value.Wins.ToString(),
                 entry.Value.Losses.ToString(),
                 entry.Value.Draws.ToString(),
