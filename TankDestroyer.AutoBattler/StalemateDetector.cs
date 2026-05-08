@@ -10,6 +10,7 @@ public class StalemateDetector
 
     public bool IsStalemate(Tank[] tanks)
     {
+        return false;
         bool anyActive = false;
         foreach (var tank in tanks)
         {
