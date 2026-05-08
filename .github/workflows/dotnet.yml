@@ -125,20 +125,23 @@ jobs:
       - name: Godot C# Project Prep
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-            cd Game
-            
-            dotnet restore
-            
-            godot --headless --build-solutions --quit || echo "Build finished with warnings"
-            cd ..
+          dotnet restore All.slnx
+          
+          godot --headless --path Game --editor --quit-after 50 || echo "Editor initialization finished"
+
+          godot --headless --path Game --build-solutions --quit
 
       - name: Import and Export
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-                godot --headless --path Game --import
+          # 4. Importeer alle assets opnieuw. Nu de scripts gecompileerd zijn, 
+          # herkent de importer de types in de .tscn bestanden.
+          godot --headless --path Game --import --quit
+
+          # 5. Voer de export uit naar een absoluut pad
+          mkdir -p Build
+          godot --headless --path Game --export-debug "Windows Desktop" "$(pwd)/Build/TankDestroyer.exe"
                 
-                mkdir -p Build
-                godot --headless --path Game --export-debug "Windows Desktop" $(pwd)/Build/TankDestroyer.exe
       - name: List Build folder
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: ls -la Build/ && ls -la Build/data_TankDestroyer_windows_x86_64/ || echo "data folder not found"
