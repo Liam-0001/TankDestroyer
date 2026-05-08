@@ -86,7 +86,7 @@ class Program
             var games = maps.SelectMany(map => botGroups, (map, group) => new { Map = map, BotTypes = group }).ToList();
 
             Console.SetOut(TextWriter.Null);
-
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             await SystemConsole.Progress()
                 .AutoRefresh(true)
                 .Columns(new ProgressColumn[]
@@ -125,7 +125,10 @@ class Program
                     );
                 });
 
+            sw.Stop();
+
             Console.SetOut(OriginalOut);
+            SystemConsole.MarkupLine($"[green]Simulations finished in {sw.Elapsed.TotalSeconds:F2}s[/]");
             PrintResults();
             SystemConsole.MarkupLine("[bold green]Game Finished![/]");
         }
@@ -166,8 +169,7 @@ class Program
                 Console.SetOut(OriginalOut);
                 SystemConsole.WriteException(e, new ExceptionSettings { Format = ExceptionFormats.ShowLinks });
                 Console.SetOut(prevOut);
-            }
-            */
+            }*/
             hasCrashed = true;
             lastTurn = runner.GetTurns().LastOrDefault();
         }
