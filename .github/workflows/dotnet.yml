@@ -2,12 +2,12 @@ name: .NET
 
 on:
   push:
-    branches: [ "master", "Pipeline-test-branch" ]
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 
 env:
-  DEPLOY_BRANCH: Pipeline-test-branch
+  DEPLOY_BRANCH: master
   GODOT_VERSION: 4.6.2
 
 jobs:
