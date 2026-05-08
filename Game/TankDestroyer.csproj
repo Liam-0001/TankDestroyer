@@ -4,14 +4,10 @@
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="TankDestroyer.API">
-      <HintPath>..\Build\TankDestroyer.API.dll</HintPath>
-    </Reference>
-    <Reference Include="TankDestroyer.Engine">
-      <HintPath>..\Build\TankDestroyer.Engine.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Source\TankDestroyer.API\TankDestroyer.API.csproj" />
+        <ProjectReference Include="..\Source\TankDestroyer.Engine\TankDestroyer.Engine.csproj" />
+    </ItemGroup>
   <ItemGroup>
     <None Include="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

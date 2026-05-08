@@ -126,15 +126,7 @@ jobs:
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
           dotnet restore All.slnx
-
-          dotnet build Source/TankDestroyer.API/TankDestroyer.API.csproj -c Release
-          dotnet build Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj -c Release
-
-          # 3. Forceer Godot om de 'Glue' te genereren. 
-          # Omdat de logica nu gebouwd is, kan Godot de referenties resolven.
-          godot --headless --path Game --editor --quit-after 200 || echo "Editor init done"
-
-          # 4. Bouw de solution vanuit Godot context
+          
           godot --headless --path Game --build-solutions --quit
 
       - name: Debug DLL existence
