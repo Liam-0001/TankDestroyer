@@ -36,10 +36,26 @@ public partial class UINode : Control
 
     public override void _Ready()
     {
-        ConfigFile file =
-            System.Text.Json.JsonSerializer.Deserialize<ConfigFile>(System.IO.File.ReadAllText("config.json"));
-        BotTypes = _collectBotService.LoadBots(Path.GetFullPath(file.BotFolder));
-        Maps = _collectMapsService.LoadMaps(Path.GetFullPath(file.MapFolder));
+        var baseDir = OS.GetExecutablePath().GetBaseDir();
+        var configPath = Path.Combine(baseDir, "config.json");
+        
+        if (!File.Exists(configPath))
+        {
+            GD.PrintErr($"Config not found: {configPath}");
+            // Fallback voor tijdens development in de editor
+            configPath = "config.json"; 
+        }
+
+        var file = System.Text.Json.JsonSerializer.Deserialize<ConfigFile>(File.ReadAllText(configPath));
+
+        var botPath = Path.IsPathRooted(file.BotFolder) ? file.BotFolder : Path.Combine(baseDir, file.BotFolder);
+        var mapPath = Path.IsPathRooted(file.MapFolder) ? file.MapFolder : Path.Combine(baseDir, file.MapFolder);
+
+        GD.Print($"Loading bots from: {botPath}");
+        GD.Print($"Loading maps from: {mapPath}");
+
+        BotTypes = _collectBotService.LoadBots(botPath);
+        Maps = _collectMapsService.LoadMaps(mapPath);
         base._Ready();
         MapButton.AddItem("Random generated", 0);
         for (int i = 0; i < Maps.Length; i++)

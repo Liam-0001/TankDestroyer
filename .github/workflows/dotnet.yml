@@ -40,7 +40,9 @@ jobs:
 
       - name: Copy config to Build
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
-        run: cp Game/config.json Build/config.json
+        run: |
+          cp Game/config.json Build/config.json
+          cp -r Maps Build/Maps
 
       - name: Stage .NET build
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
