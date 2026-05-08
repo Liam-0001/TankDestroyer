@@ -40,8 +40,14 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build
-        run: dotnet build --no-restore
+      - name: Restore dependencies
+        run: dotnet restore TankDestroyer.sln # Gebruik je solution file
+
+      - name: Build API
+        run: dotnet build TankDestroyer.API/TankDestroyer.API.csproj -c Release
+
+      - name: Build All
+        run: dotnet build --no-restore -c Release
 
       - name: Copy config to Build
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
