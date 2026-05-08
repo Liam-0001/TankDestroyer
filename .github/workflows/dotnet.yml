@@ -30,7 +30,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
 
       - name: Configure git
         run: |
@@ -41,7 +41,7 @@ jobs:
         run: dotnet restore
 
       - name: Restore dependencies
-        run: dotnet restore TankDestroyer.sln # Gebruik je solution file
+        run: dotnet restore All.slnx
 
       - name: Build API
         run: dotnet build TankDestroyer.API/TankDestroyer.API.csproj -c Release
