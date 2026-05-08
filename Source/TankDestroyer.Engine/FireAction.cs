@@ -17,6 +17,11 @@ public class FireAction : TankAction
             return false;
         }
 
+        if (tank.Ammo == 0)
+        {
+            return false;
+        }
+
         Bullet bullet = new(tank.OwnerId)
         {
             X = tank.X,
@@ -27,6 +32,7 @@ public class FireAction : TankAction
         };
         tank.Fired = true;
         game.Bullets.Add(bullet);
+        tank.Ammo--;
         return true;
     }
 }

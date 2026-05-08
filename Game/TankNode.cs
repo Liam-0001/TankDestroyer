@@ -1,129 +1,113 @@
 using System.Linq;
 using Godot;
 using TankDestroyer.API;
+using TankDestroyer.Extensions;
 
 namespace TankDestroyer;
 
 public partial class TankNode : Node3D
 {
-	public ITank Tank { get; set; }
+    public ITank Tank { get; set; }
 
-	[Export] Node3D TurretNode { get; set; }
-	[Export] Node3D DestroyedTurretNode { get; set; }
-	[Export] Node3D Smoke { get; set; }
-	[Export] Node3D MuzzleFlash { get; set; }
-	[Export] OrmMaterial3D ColorMaterial { get; set; }
+    [Export] Node3D TurretNode { get; set; }
+    [Export] Node3D DestroyedTurretNode { get; set; }
+    [Export] Node3D Smoke { get; set; }
+    [Export] Node3D MuzzleFlash { get; set; }
+    [Export] OrmMaterial3D ColorMaterial { get; set; }
 
-	public override void _Ready()
-	{
-		base._Ready();
-	}
+    public override void _Ready()
+    {
+        base._Ready();
+    }
 
 
-	private Tween _rotateTween;
+    private Tween _rotateTween;
 
-	public void DestroyTurret()
-	{
-		TurretNode.Visible = false;
-		DestroyedTurretNode.Visible = true;
-		Smoke.Visible = true;
-	}
+    public void DestroyTurret()
+    {
+        TurretNode.Visible = false;
+        DestroyedTurretNode.Visible = true;
+        Smoke.Visible = true;
+    }
 
-	private bool _initialized;
+    private bool _initialized;
 
-	public override void _Process(double delta)
-	{
-		if (!_initialized)
-		{
-			_initialized = true;
-			var player = GetTree().GetGameNode().GetPlayers().Single(c => c.Tank.OwnerId == Tank.OwnerId);
-			ColorMaterial.Set("albedo_color", Color.FromHtml(player.Color));
-			TurretNode.Set("surface_material_override/1", ColorMaterial);
-			DestroyedTurretNode.Set("surface_material_override/1", ColorMaterial);
-		}
+    public override void _Process(double delta)
+    {
+        if (!_initialized)
+        {
+            _initialized = true;
+            var player = GetTree().GetGameNode().GetPlayers().Single(c => c.Tank.OwnerId == Tank.OwnerId);
+            ColorMaterial.Set("albedo_color", Color.FromHtml(player.Color));
+            TurretNode.Set("surface_material_override/1", ColorMaterial);
+            DestroyedTurretNode.Set("surface_material_override/1", ColorMaterial);
+        }
 
-		base._Process(delta);
-	}
+        base._Process(delta);
+    }
 
-	public void CorrectTurretRotation()
-	{
-		var targetRotation = DetermineRotation();
-		if (TurretNode.GlobalRotationDegrees.EqualsWithMargin(targetRotation))
-		{
-			if (Tank.Fired)
-			{
-				PlayMuzzleFlash();
-			}
+    public void CorrectTurretRotation()
+    {
+        var targetRotation = Tank.TurretDirection.Get3DVector();
+        if (TurretNode.GlobalRotationDegrees.EqualsWithMargin(targetRotation))
+        {
+            if (Tank.Fired)
+                PlayMuzzleFlash();
+            return;
+        }
+        
+        var currentY = TurretNode.GlobalRotationDegrees.Y;
+        var targetY = targetRotation.Y;
 
-			return;
-		}
+        var diff = targetY - currentY;
+        if (diff > 180f) diff -= 360f;
+        if (diff < -180f) diff += 360f;
 
-		_rotateTween?.Kill();
-		_rotateTween = GetTree().CreateTween();
-		_rotateTween.TweenProperty(this.TurretNode, "global_rotation_degrees",
-			new Vector3(0, targetRotation.Y, 0), GetTree().GetGameNode().GameSpeed * 0.9f);
-		_rotateTween.TweenCallback(Callable.From(() =>
-		{
-			if (Tank.Fired)
-			{
-				PlayMuzzleFlash();
-			}
-		}));
-	}
+        var shortestTargetY = currentY + diff;
 
-	private void PlayMuzzleFlash()
-	{
-		MuzzleFlash.Call("play");
-	}
+        _rotateTween?.Kill();
+        _rotateTween = GetTree().CreateTween();
+        _rotateTween.TweenProperty(TurretNode, "global_rotation_degrees",
+            new Vector3(0, shortestTargetY, 0), GetTree().GetGameNode().GameSpeed * 0.9f);
+        _rotateTween.TweenCallback(Callable.From(() =>
+        {
+            var normalized = TurretNode.GlobalRotationDegrees;
+            normalized.Y = Mathf.Wrap(normalized.Y, -180f, 180f);
+            TurretNode.GlobalRotationDegrees = normalized;
 
-	public float Difference(float targetAngle)
-	{
-		var angle = Mathf.Abs(targetAngle);
-		if (angle > 180.0)
-		{
-			return 360.0f - angle;
-		}
+            if (Tank.Fired) PlayMuzzleFlash();
+        }));
+    }
 
-		return angle;
-	}
+    private void PlayMuzzleFlash()
+    {
+        MuzzleFlash.Call("play");
+    }
 
-	private Vector3 DetermineRotation()
-	{
-		switch (Tank.TurretDirection)
-		{
-			case TurretDirection.North:
-				return new Vector3(0, 0, 0);
-			case TurretDirection.NorthWest:
-				return new Vector3(0, 45f, 0);
-			case TurretDirection.NorthEast:
-				return new Vector3(0, -45f, 0);
-			case TurretDirection.South:
-				return new Vector3(0, -180f, 0);
-			case TurretDirection.SouthWest:
-				return new Vector3(0, -225f, 0);
-			case TurretDirection.SouthEast:
-				return new Vector3(0, 225f, 0);
-			case TurretDirection.East:
-				return new Vector3(0, 270f, 0);
-			case TurretDirection.West:
-				return new Vector3(0, -270f, 0);
-			default:
-				return new Vector3(0, 0, 0);
-		}
-	}
+    private float Difference(float targetAngle)
+    {
+        var angle = Mathf.Abs(targetAngle);
+        if (angle > 180.0)
+        {
+            return 360.0f - angle;
+        }
 
-	public void UpdateAll()
-	{
-		GlobalPosition = new Vector3((Tank.X * 2f) + 1f, 1f, Tank.Y * 2f + 1f);
-		var targetRotation = DetermineRotation();
-		if (!TurretNode.GlobalRotationDegrees.EqualsWithMargin(targetRotation))
-		{
-			this.TurretNode.GlobalRotationDegrees = new Vector3(0, targetRotation.Y, 0);
-		}
+        return angle;
+    }
 
-		if (Tank.Destroyed)
-		{
-			DestroyTurret();
-		}
-	}
+
+    public void UpdateAll()
+    {
+        GlobalPosition = new Vector3((Tank.X * 2f) + 1f, 1f, Tank.Y * 2f + 1f);
+        var targetRotation = Tank.TurretDirection.Get3DVector();
+        if (!TurretNode.GlobalRotationDegrees.EqualsWithMargin(targetRotation))
+        {
+            this.TurretNode.GlobalRotationDegrees = new Vector3(0, targetRotation.Y, 0);
+        }
+
+        if (Tank.Destroyed)
+        {
+            DestroyTurret();
+        }
+    }
 }

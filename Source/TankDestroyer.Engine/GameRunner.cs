@@ -2,22 +2,28 @@
 using System.Numerics;
 using System.Reflection;
 using TankDestroyer.API;
+using TankDestroyer.Engine.Extensions;
+using TankDestroyer.Engine.Objects;
+using TankDestroyer.Engine.Services.Ammo;
 
 namespace TankDestroyer.Engine;
 
 public class GameRunner
 {
     private Game _game;
+    private readonly IAmmoService _ammoService;
     public bool Finished { get; set; }
 
     public GameRunner(World world, IPlayerBot[] playerBots)
     {
         _game = new Game(world, playerBots);
+        _ammoService = new AmmoService(_game);
         GameTurn turn = new GameTurn();
         turn.World = _game.World;
         turn.Tanks = _game.Tanks.Select(c => c.Clone()).ToArray();
         turn.Actions = Array.Empty<TankAction>();
         turn.Bullets = Array.Empty<Bullet>();
+        turn.MunitionBoxes = Array.Empty<MunitionBox>();
         _game.Turns.Add(turn);
     }
 
@@ -61,7 +67,6 @@ public class GameRunner
             }
         }
 
-        var currentBullets = GetBullets();
         foreach (var bullet in GetBullets())
         {
             ProcessBullet(bullet);
@@ -73,6 +78,10 @@ public class GameRunner
         turn.Actions = turnActions.ToArray();
         turn.Bullets = _game.Bullets.Select(c => c.Clone()).ToArray();
         turn.Turn = _game.Turns.Last().Turn + 1;
+        turn.MunitionBoxes = _game.MunitionBoxes.Select(m => m.Clone()).ToArray();
+        _ammoService.PickupAmmo(turn);
+        _ammoService.SpawnAmmo(5);
+        turn.MunitionBoxes = _game.MunitionBoxes.Select(m => m.Clone()).ToArray(); 
         _game.Turns.Add(turn);
 
         Finished = _game.Tanks.Length > 1 && _game.Tanks.Count(c => c.Destroyed == false) <= 1;
@@ -81,27 +90,7 @@ public class GameRunner
 
     private void ProcessBullet(Bullet bullet)
     {
-        var direction = new Vector2(0, 0);
-        if (bullet.Direction.HasFlag(TurretDirection.North))
-        {
-            direction += new Vector2(0, 1);
-        }
-
-        if (bullet.Direction.HasFlag(TurretDirection.South))
-        {
-            direction += new Vector2(0, -1);
-        }
-
-        if (bullet.Direction.HasFlag(TurretDirection.West))
-        {
-            direction += new Vector2(1, 0);
-        }
-
-        if (bullet.Direction.HasFlag(TurretDirection.East))
-        {
-            direction += new Vector2(-1, 0);
-        }
-
+        var direction = bullet.GetVector();
         var normalized = Vector2.Normalize(direction);
         var movement = normalized * 5f;
         for (int i = 0; i <= 6; i++)

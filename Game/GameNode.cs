@@ -13,14 +13,17 @@ public partial class GameNode : Node
 	[Export] public WorldNode WorldNode { get; set; }
 
 	[Export] public PackedScene TankScene { get; set; }
+	[Export] public PackedScene AmmoScene { get; set; }
 	[Export] public PackedScene BulletScene { get; set; }
 	[Export] public float GameSpeed { get; set; } = 1f;
 
 	[Export] public Node3D TankContainer { get; set; }
+	[Export] public Node3D AmmoContainer { get; set; }
 	[Export] public Node3D BulletContainer { get; set; }
 	public bool HasGame => _gameRunner != null;
 
 	private TankNode[] _tanks;
+	private AmmoNode[] _ammoBoxes;
 
 
 	private GameRunner _gameRunner;
@@ -28,7 +31,6 @@ public partial class GameNode : Node
 
 	public override void _Ready()
 	{
-		
 	}
 
 	public void StartGame(GameRunner gameRunner)
@@ -36,6 +38,7 @@ public partial class GameNode : Node
 		_playing = false;
 		_tanks = null;
 		_currentTurn = null;
+		_ammoBoxes = null;
 		_gameRunner = gameRunner;
 		InitializeGame();
 	}
@@ -44,6 +47,7 @@ public partial class GameNode : Node
 	{
 		TankContainer.RemoveAndClearChilderen();
 		BulletContainer.RemoveAndClearChilderen();
+		AmmoContainer.RemoveAndClearChilderen();
 		WorldNode.GridMap.RemoveAndClearChilderen();
 		WorldNode.World = _gameRunner.GetWorld();
 		foreach (var tank in _gameRunner.GetTanks())
@@ -95,7 +99,7 @@ public partial class GameNode : Node
 		EmitSignalChangedTurn();
 	}
 
-	public void UpdateGameToTurnWitouthAnimation(GameTurn gameTurn)
+	public void UpdateGameToTurnWithoutAnimation(GameTurn gameTurn)
 	{
 		foreach (var tankNode in _tanks)
 		{
@@ -119,6 +123,18 @@ public partial class GameNode : Node
 			bulletNode.GlobalPosition = new Vector3((bullet.StartingX * 2f) + 1f, 1f, bullet.StartingY * 2f + 1f);
 			bulletNode.Deleted = bullet.Destroyed;
 			bulletNode.UpdateLocation(true);
+		}
+
+		AmmoContainer.RemoveAndClearChilderen();
+
+		var ammoBoxes = gameTurn.MunitionBoxes;
+		foreach (var ammo in ammoBoxes)
+		{
+			var ammoNode = AmmoScene.Instantiate<AmmoNode>();
+			ammoNode.MunitionBox = ammo;
+			AmmoContainer.AddChild(ammoNode);
+			ammoNode.GlobalPosition = new Vector3((ammo.X * 2f) + 1f, 1f, ammo.Y * 2f + 1f);
+			ammoNode.Update();
 		}
 	}
 
@@ -191,6 +207,39 @@ public partial class GameNode : Node
 				bulletNode.UpdateLocation();
 			}
 		}));
+
+		UpdateAmmoBoxes();
+	}
+
+	private void UpdateAmmoBoxes()
+	{
+		if (AmmoScene == null) return;
+		
+		var ammoNodes = AmmoContainer.GetChildren().OfType<AmmoNode>().ToArray();
+		var ammoBoxes = _currentTurn.MunitionBoxes;
+
+		foreach (var ammoNode in ammoNodes)
+		{
+			if (ammoBoxes.All(c => c.Id != ammoNode.MunitionBox.Id))
+			{
+				AmmoContainer.RemoveChild(ammoNode);
+			}
+		}
+
+		foreach (var munitionBox in ammoBoxes)
+		{
+			var currentAmmoNode = ammoNodes.FirstOrDefault(c => c.MunitionBox.Id.Equals(munitionBox.Id));
+			if (currentAmmoNode != null) continue;
+
+			var ammoNode = AmmoScene.Instantiate<AmmoNode>();
+			ammoNode.MunitionBox = munitionBox;
+			AmmoContainer.AddChild(ammoNode);
+			ammoNode.GlobalPosition = new Vector3((munitionBox.X * 2f) + 1f, 1f, munitionBox.Y * 2f + 1f);
+			ammoNode.Visible = true;
+			ammoNode.Update();
+		}
+		
+		_ammoBoxes = AmmoContainer.GetChildren().OfType<AmmoNode>().ToArray();
 	}
 
 	private double _timeElapsed = 0f;
@@ -238,19 +287,19 @@ public partial class GameNode : Node
 		_playing = false;
 	}
 
-	public bool IsPlaying()=> _playing;
+	public bool IsPlaying() => _playing;
 
 	public void StepBack()
 	{
 		_currentTurn = _gameRunner.GetTurns()[Math.Max(0, GetCurrentTurnIndex() - 1)];
-		UpdateGameToTurnWitouthAnimation(_currentTurn);
+		UpdateGameToTurnWithoutAnimation(_currentTurn);
 		EmitSignalChangedTurn();
 	}
 
 	public void SetStepIndex(int value)
 	{
 		_currentTurn = _gameRunner.GetTurns()[value];
-		UpdateGameToTurnWitouthAnimation(_currentTurn);
+		UpdateGameToTurnWithoutAnimation(_currentTurn);
 		EmitSignalChangedTurn();
 	}
 }

@@ -1,121 +1,176 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.Text;
+using Spectre.Console;
 using TankDestroyer.API;
+using TankDestroyer.ConsoleApp.Extensions;
 using TankDestroyer.Engine;
 
-namespace TankDestroyer.ConsoleApp;
+namespace TankDestroyer.Console;
 
 public class ConsoleRenderer
 {
+    public async Task AnimateTurn(
+        GameTurn turn,
+        GameTurn? previousTurn,
+        World world,
+        IReadOnlyDictionary<int, Color> playerColors,
+        IReadOnlyDictionary<int, string> playerLabels,
+        int durationMs = 500)
+    {
+        var frames = 10;
+        var frameDelay = durationMs / frames;
+
+        // Ensure we clear before starting the live display
+        AnsiConsole.Clear();
+
+        await AnsiConsole.Live(new Markup(GenerateFullFrame(turn, previousTurn, world, playerColors, playerLabels, 0.0f)))
+            .StartAsync(async ctx =>
+            {
+                for (int i = 1; i <= frames; i++)
+                {
+                    float progress = i / (float)frames;
+                    ctx.UpdateTarget(new Markup(GenerateFullFrame(turn, previousTurn, world, playerColors, playerLabels, progress)));
+                    await Task.Delay(frameDelay);
+                }
+            });
+    }
+
     public void Render(
         GameTurn turn,
+        GameTurn? previousTurn,
         World world,
-        IReadOnlyDictionary<int, ConsoleColor> playerColors,
+        IReadOnlyDictionary<int, Color> playerColors,
         IReadOnlyDictionary<int, string> playerLabels)
     {
-        ClearConsole();
+        AnsiConsole.Clear();
+        AnsiConsole.Write(new Markup(GenerateFullFrame(turn, previousTurn, world, playerColors, playerLabels, 1.0f)));
+    }
+
+    private string GenerateFullFrame(GameTurn turn, GameTurn? previousTurn, World world, IReadOnlyDictionary<int, Color> playerColors, IReadOnlyDictionary<int, string> playerLabels, float bulletProgress)
+    {
+        var sb = new StringBuilder();
+        sb.Append(GenerateGrid(turn, previousTurn, world, playerColors, bulletProgress));
+        sb.Append(GenerateStats(turn, playerColors, playerLabels));
+        return sb.ToString();
+    }
+
+    private string GenerateGrid(GameTurn turn, GameTurn? previousTurn, World world, IReadOnlyDictionary<int, Color> playerColors, float bulletProgress)
+    {
+        var sb = new StringBuilder();
+        
+        // Calculate interpolated bullet positions for this frame
+        var currentBullets = new List<(int X, int Y, int OwnerId, bool Explode, bool Destroyed)>();
+        foreach (var b in turn.Bullets)
+        {
+            // Find this bullet in the previous turn to know where it started THIS turn.
+            // If not found, it was just fired, so it starts at b.StartingX/Y (tank position).
+            var prevBullet = previousTurn?.Bullets.FirstOrDefault(pb => pb.Id == b.Id);
+            
+            int startX = prevBullet?.X ?? b.StartingX;
+            int startY = prevBullet?.Y ?? b.StartingY;
+            int endX = b.Destroyed ? b.EndedAtX : b.X;
+            int endY = b.Destroyed ? b.EndedAtY : b.Y;
+
+            // Simple linear interpolation
+            int curX = (int)Math.Round(startX + (endX - startX) * bulletProgress);
+            int curY = (int)Math.Round(startY + (endY - startY) * bulletProgress);
+            
+            // Only show explosion on final progress if it exploded
+            bool isExploding = b.Explode && bulletProgress >= 0.8f;
+            
+            currentBullets.Add((curX, curY, b.OwnerId, isExploding, b.Destroyed));
+        }
 
         for (int y = 0; y < world.Height; y++)
         {
             for (int x = 0; x < world.Width; x++)
             {
+                // Draw Tanks
                 var tank = turn.Tanks.FirstOrDefault(t => t.X == x && t.Y == y);
                 if (tank != null)
                 {
                     if (tank.Destroyed)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
-                        Console.Write("X ");
+                        sb.Append("[grey]X [/]");
                     }
                     else
                     {
-                        Console.ForegroundColor = playerColors.TryGetValue(tank.OwnerId, out var color)
-                            ? color
-                            : ConsoleColor.Gray;
-                        Console.Write(GetTankChar(tank.TurretDirection) + " ");
+                        var color = playerColors.TryGetValue(tank.OwnerId, out var c) ? c : Color.Grey;
+                        sb.Append($"[{color.ToMarkup()}]{GetTankChar(tank.TurretDirection)} [/]");
                     }
-
                     continue;
                 }
 
-                var bullet = turn.Bullets.FirstOrDefault(b =>
-                   (!b.Destroyed && b.X == x &&
-                    b.Y == y)|| (b.Destroyed && b.EndedAtX == x && b.EndedAtY == y));
-                if (bullet != null)
+                // Draw Bullets (Interpolated)
+                var bullet = currentBullets.FirstOrDefault(b => b.X == x && b.Y == y);
+                if (bullet != default)
                 {
-                    if(bullet.Explode)
+                    if (bullet.Explode)
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
+                        sb.Append("[red]* [/]");
                     }
-                    else if( bullet.Destroyed)
+                    else if (bullet.Destroyed && bulletProgress >= 1.0f)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;    
+                        sb.Append("[grey]* [/]");
+                    }
+                    else if (!bullet.Destroyed || bulletProgress < 1.0f)
+                    {
+                        var color = playerColors.TryGetValue(bullet.OwnerId, out var c) ? c : Color.White;
+                        sb.Append($"[{color.ToMarkup()}]* [/]");
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.White;
+                         sb.Append(GetTileMarkup(world.GetTile(x, y).TileType));
                     }
-            
-                    Console.Write("* ");
+                    continue;
+                }
+                
+                
+                var ammoBox = turn.MunitionBoxes.FirstOrDefault(b => b.X == x && b.Y == y);
+                if (ammoBox != null)
+                {
+                    var color = Color.RosyBrown;
+                    sb.Append($"[{color.ToMarkup()}]{ammoBox.GetAscii()} [/]");
                     continue;
                 }
 
                 var tile = world.GetTile(x, y);
-                RenderTile(tile.TileType);
+                sb.Append(GetTileMarkup(tile.TileType));
             }
-
-            Console.WriteLine();
+            sb.AppendLine();
         }
+        return sb.ToString();
+    }
 
-        Console.ResetColor();
-        Console.WriteLine($"Turn: {turn.Turn}");
-        Console.WriteLine("Health:");
+    private string GenerateStats(GameTurn turn, IReadOnlyDictionary<int, Color> playerColors, IReadOnlyDictionary<int, string> playerLabels)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"\nTurn: [yellow]{turn.Turn}[/]");
+        sb.AppendLine("Health:");
         foreach (var tank in turn.Tanks.OrderBy(t => t.OwnerId))
         {
             var label = playerLabels.TryGetValue(tank.OwnerId, out var playerName)
                 ? playerName
                 : $"Player {tank.OwnerId}";
 
-            Console.ForegroundColor = playerColors.TryGetValue(tank.OwnerId, out var color)
-                ? color
-                : ConsoleColor.Gray;
-
-            Console.Write($"- {label}");
-            Console.ResetColor();
-            Console.WriteLine($": {tank.Health} HP{(tank.Destroyed ? " (destroyed)" : string.Empty)}");
+            var color = playerColors.TryGetValue(tank.OwnerId, out var c) ? c : Color.Grey;
+            var destroyedInfo = tank.Destroyed ? " [red](destroyed)[/]" : string.Empty;
+            
+            sb.AppendLine($" - [{color.ToMarkup()}]{Markup.Escape(label)}[/]: {tank.Health} HP{destroyedInfo}");
         }
+        return sb.ToString();
     }
 
-    private void RenderTile(TileType type)
+    private string GetTileMarkup(TileType type)
     {
-        switch (type)
+        return type switch
         {
-            case TileType.Grass:
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write(". ");
-                break;
-            case TileType.Tree:
-                Console.ForegroundColor = ConsoleColor.DarkGreen;
-                Console.Write("T ");
-                break;
-            case TileType.Building:
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.Write("# ");
-                break;
-            case TileType.Water:
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write("~ ");
-                break;
-            case TileType.Sand:
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write(", ");
-                break;
-            default:
-                Console.Write("  ");
-                break;
-        }
+            TileType.Grass => "[green]. [/]",
+            TileType.Tree => "[darkgreen]T [/]",
+            TileType.Building => "[olive]# [/]",
+            TileType.Water => "[blue]~ [/]",
+            TileType.Sand => "[yellow], [/]",
+            _ => "  "
+        };
     }
 
     private char GetTankChar(TurretDirection direction)
@@ -132,17 +187,5 @@ public class ConsoleRenderer
             TurretDirection.SouthWest => '↗',
             _ => 'O'
         };
-    }
-
-    private static void ClearConsole()
-    {
-        try
-        {
-            Console.Clear();
-        }
-        catch (IOException)
-        {
-            // Some hosts do not support full-screen clearing.
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using TankDestroyer.API;
+using TankDestroyer.Engine.Objects;
 
 namespace TankDestroyer.Engine;
 
@@ -16,6 +17,8 @@ public class Game
             var spawnPoint = World.SpawnPoints[i];
             Tanks[i].X = (int)spawnPoint.X;
             Tanks[i].Y = (int)spawnPoint.Y;
+            Tanks[i].Ammo = 10;
+            Tanks[i].MaxAmmo = 10;
         }
     }
 
@@ -26,4 +29,5 @@ public class Game
     public List<GameTurn> Turns { get; set; } = new();
 
     public List<Bullet> Bullets { get; set; } = new();
+    public List<MunitionBox> MunitionBoxes { get; set; } = [];
 }
