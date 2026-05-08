@@ -83,7 +83,7 @@ jobs:
       - name: Export Godot project
         run: |
           mkdir -p GodotBuild
-          godot --headless --export-release "Windows Desktop" GodotBuild/TankDestroyer.exe
+          godot --headless --export-debug "Windows Desktop" GodotBuild/TankDestroyer.exe
 
       - name: Stage Godot build
         run: git add -f GodotBuild
