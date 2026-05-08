@@ -125,10 +125,8 @@ jobs:
       - name: Godot C# Project Prep
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-          c# 1. Restore de volledige solution zodat ALLE projecten (ook Logica) gelinkt zijn
           dotnet restore All.slnx
 
-          # 2. Bouw de logica projecten eerst handmatig naar de shared build folder
           dotnet build Source/TankDestroyer.API/TankDestroyer.API.csproj -c Release
           dotnet build Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj -c Release
 
