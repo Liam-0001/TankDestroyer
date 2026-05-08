@@ -34,8 +34,9 @@ jobs:
         if: github.ref == 'refs/heads/Pipeline-test-branch'
         run: git add -f Build
       - name: commit changed files
-        if: github.ref == 'refs/heads/Pipeline-test-branch'
-        run: git diff --quiet && git diff --staged --quiet || git commit -m "Update buildfolder at $(date +'%Y-%m-%d %H:%M:%S')"
+          if: github.ref == 'refs/heads/Pipeline-test-branch'
+          run:
+            git diff --quiet && git diff --staged --quiet || git commit -m "Update buildfolder at $(TZ='Europe/Brussels' date +'%Y-%m-%d %H:%M:%S')"
       - name: push code
         if: github.ref == 'refs/heads/Pipeline-test-branch'
         run: git push origin HEAD:Pipeline-test-branch
