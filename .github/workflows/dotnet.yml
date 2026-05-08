@@ -22,6 +22,11 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Clean Build directory
+        run: |
+          rm -rf Build
+          mkdir -p Build
+        
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -109,11 +114,11 @@ jobs:
       - name: Import Godot assets
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
-            mkdir -p Game/.godot/editor
-            mkdir -p Game/.godot/imported
-            godot --headless --audio-driver Dummy --path Game --editor --quit-after 20 || true
-            godot --headless --audio-driver Dummy --path Game --import
-
+          mkdir -p Game/.godot/editor
+          mkdir -p Game/.godot/imported
+          cd Game && dotnet build && cd ..
+          godot --headless --path Game --import
+          
       - name: Export Godot project
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
