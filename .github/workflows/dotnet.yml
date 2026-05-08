@@ -15,24 +15,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: stage changed files
-      if: github.ref == 'refs/heads/Pipeline-test-branch'
-      run: grun: git add -f Build
-    - name: commit changed files
-      if: github.ref == 'refs/heads/Pipeline-test-branch'
-      run: git commit -m "Update buildfolder at $(date +'%Y-%m-%d %H:%M:%S')"
-    - name: fetch from master
-      if: github.ref == 'refs/heads/Pipeline-test-branch'
-      run: git fetch origin master
-    - name: push code
-      if: github.ref == 'refs/heads/Pipeline-test-branch'
-      run: git push origin HEAD:master
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+      - name: configure git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+      - name: stage changed files
+        if: github.ref == 'refs/heads/Pipeline-test-branch'
+        run: git add -f Build
+      - name: commit changed files
+        if: github.ref == 'refs/heads/Pipeline-test-branch'
+        run: git diff --quiet && git diff --staged --quiet || git commit -m "Update buildfolder at $(date +'%Y-%m-%d %H:%M:%S')"
+      - name: push code
+        if: github.ref == 'refs/heads/Pipeline-test-branch'
+        run: git push origin HEAD:Pipeline-test-branch
