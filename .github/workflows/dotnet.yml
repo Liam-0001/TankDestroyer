@@ -77,12 +77,13 @@ jobs:
           chmod +x /usr/local/bin/godot
 
       - name: Setup Godot export templates
-        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
-        run: |
-          mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-          wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
-          unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-
+          if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+          run: |
+            mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+            wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
+            unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
+            mv templates/* ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
+            
       - name: Export Godot project
         if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: |
