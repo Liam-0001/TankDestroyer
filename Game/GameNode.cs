@@ -101,6 +101,7 @@ public partial class GameNode : Node
 
 	public void UpdateGameToTurnWithoutAnimation(GameTurn gameTurn)
 	{
+		WorldNode.UpdateWorld(gameTurn.World);
 		foreach (var tankNode in _tanks)
 		{
 			var tankInTurn = gameTurn.Tanks.FirstOrDefault(c => c.OwnerId == tankNode.Tank.OwnerId);
@@ -141,6 +142,7 @@ public partial class GameNode : Node
 	private void UpdateGameWorld(GameTurn turn)
 	{
 		_currentTurn = turn;
+		WorldNode.UpdateWorld(turn.World, true);
 		var newBullets = new List<BulletNode>();
 		var bulletNodes = BulletContainer.GetChildren().OfType<BulletNode>().ToArray();
 		var bullets = turn.Bullets;
