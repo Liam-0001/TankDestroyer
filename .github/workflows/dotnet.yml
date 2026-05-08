@@ -38,6 +38,10 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
+      - name: Copy config to Build
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
+        run: cp Game/config.json Build/config.json
+
       - name: Stage .NET build
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: git add -f Build
