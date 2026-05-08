@@ -1,6 +1,3 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: .NET
 
 on:
@@ -9,33 +6,90 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  DEPLOY_BRANCH: Pipeline-test-branch
+  GODOT_VERSION: 4.6.2
+
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --no-restore
-      - name: configure git
+
+      - name: Configure git
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-      - name: stage changed files
-        if: github.ref == 'refs/heads/Pipeline-test-branch'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Stage .NET build
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
         run: git add -f Build
-      - name: commit changed files
-        if: github.ref == 'refs/heads/Pipeline-test-branch'
-        run: git diff --quiet && git diff --staged --quiet || git commit -m "Update buildfolder at $(TZ='Europe/Brussels' date +'%Y-%m-%d %H:%M:%S')"
-      - name: push code
-        if: github.ref == 'refs/heads/Pipeline-test-branch'
-        run: git push origin HEAD:Pipeline-test-branch
+
+      - name: Commit .NET build
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        run: git diff --quiet && git diff --staged --quiet || git commit -m "Update .NET build at $(TZ='Europe/Brussels' date +'%Y-%m-%d %H:%M:%S')"
+
+      - name: Push .NET build
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        run: git push origin HEAD:${{ env.DEPLOY_BRANCH }}
+
+  godot:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ env.DEPLOY_BRANCH }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Setup Godot
+        run: |
+          wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
+          unzip Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
+          mv Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64 /usr/local/bin/godot
+          chmod +x /usr/local/bin/godot
+
+      - name: Setup Godot export templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          wget https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
+          unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+
+      - name: Export Godot project
+        run: |
+          mkdir -p GodotBuild
+          godot --headless --export-debug "Windows Desktop" GodotBuild/TankDestroyer.exe
+
+      - name: Stage Godot build
+        run: git add -f GodotBuild
+
+      - name: Commit Godot build
+        run: git diff --quiet && git diff --staged --quiet || git commit -m "Update Godot build at $(TZ='Europe/Brussels' date +'%Y-%m-%d %H:%M:%S')"
+
+      - name: Push Godot build
+        run: git push origin HEAD:${{ env.DEPLOY_BRANCH }}
