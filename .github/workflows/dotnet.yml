@@ -2,14 +2,14 @@ name: .NET
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "Pipeline-test-branch" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "Pipeline-test-branch" ]
 
 env:
   DEPLOY_BRANCH: master
   GODOT_VERSION: 4.6.2
-  TARGET_REPO: hen31/TankDestroyer
+  TARGET_REPO: Liam-0001/TankDestroyer
 
 jobs:
   build:
@@ -100,11 +100,16 @@ jobs:
           unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
           mv templates/* ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
 
-      - name: Export Godot project
+      - name: Import Godot assets
         if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
         run: |
           mkdir -p Game/.godot/editor
           mkdir -p Game/.godot/imported
+          godot --headless --path Game --import
+
+      - name: Export Godot project
+        if: github.ref_name == env.DEPLOY_BRANCH && github.repository == env.TARGET_REPO
+        run: |
           godot --headless --path Game --export-debug "Windows Desktop" ../Build/TankDestroyer.exe
 
       - name: Stage Godot build
