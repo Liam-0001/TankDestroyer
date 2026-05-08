@@ -84,8 +84,8 @@ jobs:
           unzip Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
 
       - name: Export Godot project
-          if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
-          run: |
+        if: github.ref == format('refs/heads/{0}', env.DEPLOY_BRANCH)
+        run: |
             mkdir -p Game/.godot/editor
             mkdir -p Game/.godot/imported
             godot --headless --path Game --export-debug "Windows Desktop" ../Build/TankDestroyer.exe
