@@ -1,5 +1,4 @@
-﻿using TankDestroyer.API;
-using TankDestroyer.Engine;
+﻿using TankDestroyer.Engine;
 
 namespace TankDestroyer.AutoBattler;
 
@@ -10,6 +9,7 @@ public class GameResult
     public List<BotInfo> BotInfo { get; set; } = [];
     public int TurnsPlayed { get; set; }
     public bool HasCrashed { get; set; }
+    public bool IsStalemate { get; set; }
 }
 
 public class BotInfo

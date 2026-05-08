@@ -10,13 +10,14 @@ namespace TankDestroyer.AutoBattler;
 class Program
 {
     public const int MaxTurnsForStaleMate = 200;
+    public const int StalemateWindowSize = 10;
+    public const int StalematePositionThreshold = 2;
     public static ConcurrentBag<GameResult> GameResults = [];
     private static readonly TextWriter OriginalOut = Console.Out;
     private static readonly object ConsoleLock = new();
-    private static readonly IAnsiConsole SystemConsole = AnsiConsole.Create(new AnsiConsoleSettings
-    {
-        Out = new AnsiConsoleOutput(OriginalOut)
-    });
+    private static readonly IAnsiConsole SystemConsole = AnsiConsole.Create(
+        new AnsiConsoleSettings { Out = new AnsiConsoleOutput(OriginalOut) }
+    );
 
     static async Task Main(string[] args)
     {
@@ -63,8 +64,9 @@ class Program
                     {
                         color = GetDeterministicHexColor(name);
                     }
-                    
-                    if (!color.StartsWith("#")) color = "#" + color;
+
+                    if (!color.StartsWith("#"))
+                        color = "#" + color;
 
                     return new BotInfo
                     {
@@ -75,10 +77,19 @@ class Program
                 }
             );
 
-            var maps = CollectMapsService.LoadMaps(mapFolder).Where(m => m.Name.Contains("River", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var mapFilter = args.Length > 0 ? args[0] : null;
+
+            var maps = CollectMapsService.LoadMaps(mapFolder);
+            if (!string.IsNullOrEmpty(mapFilter))
+            {
+                maps = maps.Where(m => m.Name.Contains(mapFilter, StringComparison.OrdinalIgnoreCase)).ToArray();
+            }
+
             if (maps.Length == 0)
             {
-                SystemConsole.MarkupLine($"[red]No maps found in:[/] {mapFolder}");
+                SystemConsole.MarkupLine(
+                    $"[red]No maps found in:[/] {mapFolder}{(string.IsNullOrEmpty(mapFilter) ? "" : $" matching '{mapFilter}'")}"
+                );
                 return;
             }
 
@@ -87,16 +98,20 @@ class Program
 
             Console.SetOut(TextWriter.Null);
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            await SystemConsole.Progress()
+            await SystemConsole
+                .Progress()
                 .AutoRefresh(true)
-                .Columns(new ProgressColumn[]
-                {
-                    new TaskDescriptionColumn(),
-                    new ProgressBarColumn(),
-                    new PercentageColumn(),
-                    new RemainingTimeColumn(),
-                    new SpinnerColumn(Spinner.Known.Dots),
-                })
+                .Columns(
+                    new ProgressColumn[]
+                    {
+                        new TaskDescriptionColumn(),
+                        new ProgressBarColumn(),
+                        new PercentageColumn(),
+                        new ItemCountColumn(),
+                        new RemainingTimeColumn(),
+                        new SpinnerColumn(Spinner.Known.Dots),
+                    }
+                )
                 .StartAsync(async ctx =>
                 {
                     var progressTask = ctx.AddTask("[green]Simulating Games[/]", true, games.Count);
@@ -110,13 +125,15 @@ class Program
                             for (int i = 0; i < game.BotTypes.Length; i++)
                             {
                                 var info = botMetadata[game.BotTypes[i]];
-                                gameBotInfos.Add(new BotInfo
-                                {
-                                    OwnerId = i,
-                                    Name = info.Name,
-                                    Creator = info.Creator,
-                                    Color = info.Color,
-                                });
+                                gameBotInfos.Add(
+                                    new BotInfo
+                                    {
+                                        OwnerId = i,
+                                        Name = info.Name,
+                                        Creator = info.Creator,
+                                        Color = info.Color,
+                                    }
+                                );
                             }
 
                             await RunGame(botInstances, game.Map, gameBotInfos.ToArray());
@@ -127,9 +144,14 @@ class Program
 
             sw.Stop();
 
+            var totalStalemates = GameResults.Count(r => r.IsStalemate);
             Console.SetOut(OriginalOut);
             SystemConsole.MarkupLine($"[green]Simulations finished in {sw.Elapsed.TotalSeconds:F2}s[/]");
-            PrintResults();
+            SystemConsole.MarkupLine($"[yellow]Total stalemates:[/] {totalStalemates}");
+
+            var renderer = new ResultRenderer(SystemConsole);
+            renderer.PrintResults(GameResults);
+
             SystemConsole.MarkupLine("[bold green]Game Finished![/]");
         }
         finally
@@ -151,11 +173,23 @@ class Program
         GameTurn? lastTurn = null;
         int turnCount = 0;
         bool hasCrashed = false;
+        bool isStalemate = false;
+        var detector = new StalemateDetector(StalemateWindowSize, StalematePositionThreshold);
+
         try
         {
             for (; turnCount < MaxTurnsForStaleMate && !runner.Finished; turnCount++)
             {
                 runner.DoTurn();
+
+                var currentTanks = runner.GetTanks();
+                detector.Track(currentTanks);
+
+                if (turnCount >= StalemateWindowSize && detector.IsStalemate(currentTanks, runner.GetBullets()))
+                {
+                    isStalemate = true;
+                    break;
+                }
             }
 
             lastTurn = runner.GetTurns().Last();
@@ -182,82 +216,15 @@ class Program
                 BotInfo = botInfos.ToList(),
                 TurnsPlayed = turnCount,
                 HasCrashed = hasCrashed,
+                IsStalemate = isStalemate || turnCount >= MaxTurnsForStaleMate,
             }
         );
     }
 
-    private static void PrintResults()
+    private class AppConfig
     {
-        var botStats = new Dictionary<string, (int Wins, int Losses, int Draws, int Stalemates, int Crashes, string Color)>();
-
-        foreach (var result in GameResults)
-        {
-            var survivors = result.Bots.Where(t => !t.Destroyed).ToList();
-            var isStalemate = result.TurnsPlayed >= MaxTurnsForStaleMate;
-
-            foreach (var botInfo in result.BotInfo)
-            {
-                if (!botStats.ContainsKey(botInfo.Name))
-                {
-                    botStats[botInfo.Name] = (0, 0, 0, 0, 0, botInfo.Color);
-                }
-
-                var stats = botStats[botInfo.Name];
-                var tank = result.Bots.FirstOrDefault(t => t.OwnerId == botInfo.OwnerId);
-
-                if (result.HasCrashed)
-                {
-                    stats.Crashes++;
-                    stats.Losses++;
-                }
-                else if (isStalemate && tank != null && !tank.Destroyed)
-                {
-                    stats.Stalemates++;
-                }
-                else if (survivors.Count == 1 && survivors[0].OwnerId == botInfo.OwnerId)
-                {
-                    stats.Wins++;
-                }
-                else if (tank == null || tank.Destroyed)
-                {
-                    stats.Losses++;
-                }
-                else
-                {
-                    stats.Draws++;
-                }
-
-                botStats[botInfo.Name] = stats;
-            }
-        }
-
-        var table = new Table().Border(TableBorder.Rounded);
-        table.AddColumn("Bot");
-        table.AddColumn(new TableColumn("Wins").Centered());
-        table.AddColumn(new TableColumn("Losses").Centered());
-        table.AddColumn(new TableColumn("Draws").Centered());
-        table.AddColumn(new TableColumn("Stalemates").Centered());
-        table.AddColumn(new TableColumn("Crashes").Centered());
-
-        foreach (var entry in botStats.OrderByDescending(x => x.Value.Wins))
-        {
-            var color = entry.Value.Color;
-            if (string.IsNullOrEmpty(color) || !Color.TryFromHex(color, out _))
-            {
-                color = "white";
-            }
-
-            table.AddRow(
-                $"[{color}]{Markup.Escape(entry.Key)}[/]",
-                entry.Value.Wins.ToString(),
-                entry.Value.Losses.ToString(),
-                entry.Value.Draws.ToString(),
-                entry.Value.Stalemates.ToString(),
-                entry.Value.Crashes > 0 ? $"[red]{entry.Value.Crashes}[/]" : "0"
-            );
-        }
-
-        SystemConsole.Write(table);
+        public string BotFolder { get; set; } = "..\\Bots";
+        public string MapFolder { get; set; } = "..\\Maps";
     }
 
     private static AppConfig LoadConfig()
@@ -278,11 +245,5 @@ class Program
         value = value.Replace('\\', Path.DirectorySeparatorChar);
         var path = Path.IsPathRooted(value) ? value : Path.GetFullPath(value);
         return path;
-    }
-
-    private class AppConfig
-    {
-        public string BotFolder { get; set; } = "..\\Bots";
-        public string MapFolder { get; set; } = "..\\Maps";
     }
 }
