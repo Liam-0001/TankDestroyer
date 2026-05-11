@@ -7,7 +7,7 @@ public class Game
 {
     public Game(World world, IPlayerBot[] playerBots)
     {
-        World = world;
+        World = world.Clone();
         Players = new PlayerBot[playerBots.Length];
         Tanks = new Tank[playerBots.Length];
         for (int i = 0; i < playerBots.Length; i++)
