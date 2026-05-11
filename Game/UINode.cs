@@ -164,20 +164,31 @@ public partial class UINode : Control
 		PlayerScoresContainer.ClearChilderen();
 		foreach (var player in GameNode.GetPlayers())
 		{
-			PlayerScoresContainer.AddChild(new Label()
-			{
-				Text = player.Name
-			});
+			var hexColor = player.Color;
 
-			PlayerScoresContainer.AddChild(new Label()
+			var nameLabel = new Label()
+			{
+				Text = player.Name,
+			};
+
+			var creatorLabel = new Label()
 			{
 				Text = player.Creator
-			});
+			};
 
 			var healthLabel = new Label()
 			{
 				Text = player.Tank.Health + "%"
 			};
+
+			var color = Color.FromHtml(hexColor);
+			
+			nameLabel.AddThemeColorOverride("font_color", color);
+			creatorLabel.AddThemeColorOverride("font_color", color);
+			healthLabel.AddThemeColorOverride("font_color", color);
+			
+			PlayerScoresContainer.AddChild(nameLabel);
+			PlayerScoresContainer.AddChild(creatorLabel);
 			PlayerScoresContainer.AddChild(healthLabel);
 			_tankHealthMapping.Add(player.Tank.OwnerId, healthLabel);
 		}
@@ -208,11 +219,22 @@ public partial class UINode : Control
 		for (int i = 0; i < PlayerCount; i++)
 		{
 			var botSelection = BotSelections[i];
-			PlayersContainer.AddChild(new Label() { Text = (i + 1).ToString() });
+			var playerIndex = new Label() { Text = (i + 1).ToString() };
+			
+			PlayersContainer.AddChild(playerIndex);
 			OptionButton optionButton = new();
 			optionButton.AddItem("<geen>");
-			optionButton.Theme = new Theme();
 
+			if (botSelection.SelectedBot == null)
+			{
+				optionButton.AddThemeColorOverride("font_color", Colors.White);
+			}
+			else
+			{
+				var hexColor =botSelection.SelectedBot.GetCustomAttribute<BotAttribute>()?.Color;
+				optionButton.AddThemeColorOverride("font_color", Color.FromHtml(hexColor));
+			}
+			
 			foreach (var botType in BotTypes)
 			{
 				var name = botType.GetCustomAttribute<BotAttribute>()?.Name;
@@ -227,10 +249,13 @@ public partial class UINode : Control
 				if (index == 0)
 				{
 					botSelection.SelectedBot = null;
+					optionButton.AddThemeColorOverride("font_color", Colors.White);
 					return;
 				}
 
 				botSelection.SelectedBot = BotTypes[index - 1];
+				var hexColor =botSelection.SelectedBot.GetCustomAttribute<BotAttribute>()?.Color;
+				optionButton.AddThemeColorOverride("font_color", Color.FromHtml(hexColor));
 			};
 
 			if (botSelection.SelectedBot == null)
