@@ -4,11 +4,8 @@ permissions:
   contents: write
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-      - 'Source/**'
-      - 'Game/**'
+  workflow_dispatch:
+  
 
 jobs:
   export:
