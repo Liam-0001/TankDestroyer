@@ -249,4 +249,17 @@ public class GameRunner
 
         return _game.Turns[currentIndex + 1];
     }
+
+    public string GetWinnerText(ITank tank)
+    {
+        var attribute = _game.Players.Single(c => c.Id == tank.OwnerId).PlayerImplementation.GetType()
+            .GetCustomAttribute<BotAttribute>();
+
+        if (attribute == null) return "It's a tie!";
+        
+        var name = attribute.Name;
+        var creator = attribute.Creator;
+
+        return $"{creator} with bot: {name} won!";
+    }
 }
