@@ -5,6 +5,7 @@ using TankDestroyer.API;
 using TankDestroyer.Engine.Extensions;
 using TankDestroyer.Engine.Objects;
 using TankDestroyer.Engine.Services.Ammo;
+using TankDestroyer.Engine.Services.Tanks;
 
 namespace TankDestroyer.Engine;
 
@@ -12,12 +13,14 @@ public class GameRunner
 {
     private Game _game;
     private readonly IAmmoService _ammoService;
+    private readonly ITankService _tankService;
     public bool Finished { get; set; }
 
     public GameRunner(World world, IPlayerBot[] playerBots)
     {
         _game = new Game(world, playerBots);
         _ammoService = new AmmoService(_game);
+        _tankService = new TankService(_game);
         GameTurn turn = new GameTurn();
         turn.World = _game.World.Clone();
         turn.Tanks = _game.Tanks.Select(c => c.Clone()).ToArray();
@@ -63,7 +66,15 @@ public class GameRunner
         {
             if (GetTanks().Any(c => c.OwnerId == tankAction.OwnerId && !c.Destroyed))
             {
-                tankAction.Execute(_game);
+                var takenAction = tankAction.Execute(_game);
+                if (tankAction is not MoveTankAction) continue;
+                
+                var tank = GetTanks().Single(c => c.OwnerId == tankAction.OwnerId && !c.Destroyed);
+
+                if (_game.World.GetTile(tank.X, tank.Y).IsWater())
+                {
+                    _tankService.Drown(tank);
+                }
             }
         }
 
@@ -127,7 +138,7 @@ public class GameRunner
                 RemoveBulletAt(bullet, cellX, cellY);
                 if (tankAtCell.Health <= 0)
                 {
-                    DestroyTank(tankAtCell);
+                    _tankService.Destroy(tankAtCell);
                 }
 
                 break;
@@ -165,11 +176,6 @@ public class GameRunner
 
 
         RemoveBulletIfOutsideWorld(bullet);
-    }
-
-    private void DestroyTank(Tank tankAtCell)
-    {
-        tankAtCell.Destroyed = true;
     }
 
     private void RemoveBulletIfOutsideWorld(Bullet bullet)
@@ -213,7 +219,7 @@ public class GameRunner
 
     public World GetWorld() => _game.World;
 
-    public Tank[] GetTanks() => _game.Tanks;
+    public Tank[] GetTanks() => _tankService.GetTanks();
 
     public Bullet[] GetBullets() => _game.Bullets.ToArray();
 

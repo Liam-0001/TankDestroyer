@@ -11,6 +11,8 @@ public class AmmoService(Game game) : IAmmoService
     {
         var nonDestroyedTanks = _game.Tanks.Where(tank => !tank.Destroyed).ToList();
      
+        if (!nonDestroyedTanks.Any()) return 0;
+        
         var averageAmmo = nonDestroyedTanks.Select(t => t.Ammo).Average();
         var maxBoxes = nonDestroyedTanks.Count; 
         
