@@ -6,11 +6,11 @@ name: Build Bots
 on:
   push:
       branches: [ "master" ]
-  paths:
-    - 'Bots/**'
-    - 'Source/**'
-    - 'Game/**'
-    - 'TankDestroyer.Game.Console/**'
+      paths:
+        - 'Bots/**'
+        - 'Source/**'
+        - 'Game/**'
+        - 'TankDestroyer.Game.Console/**'
 
 jobs:
   build:
