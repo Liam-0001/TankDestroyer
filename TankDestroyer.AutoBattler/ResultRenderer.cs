@@ -1,9 +1,11 @@
 using Spectre.Console;
+using TankDestroyer.AutoBattler.Objects;
 
 namespace TankDestroyer.AutoBattler;
 
 public class ResultRenderer
 {
+    
     public void PrintResults(IEnumerable<GameResult> results)
     {
         var maps = results.Select(r => r.MapName).Distinct().ToList();

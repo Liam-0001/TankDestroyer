@@ -2,13 +2,19 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text;
+using System.Threading.Channels;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using TankDestroyer.API;
+using TankDestroyer.AutoBattler.Objects;
+using TankDestroyer.AutoBattler.Services;
 using TankDestroyer.Engine;
 using TankDestroyer.Engine.Services.Instantiate;
+using Game = TankDestroyer.AutoBattler.Objects.Game;
 
 namespace TankDestroyer.AutoBattler;
 
-class Program
+static class Program
 {
     public const int MaxTurnsForStaleMate = 200;
     public static ConcurrentBag<GameResult> GameResults = [];
@@ -24,7 +30,6 @@ class Program
             AnsiConsole.Clear();
             AnsiConsole.MarkupLine($"[blue]Loading application[/]");
 
-            var config = LoadConfig();
             var botFolder = ResolvePath("..\\Build\\Bots", "..\\Bots");
             var mapFolder = ResolvePath("..\\Maps", "..\\Maps");
 
@@ -48,101 +53,93 @@ class Program
                 return;
             }
 
-            var botMetadata = botTypes.ToDictionary(
-                type => type,
-                type =>
-                {
-                    var attr = type.GetCustomAttribute<BotAttribute>();
-                    var name = attr?.Name ?? type.Name;
-                    var color = attr?.Color;
-
-                    if (string.IsNullOrWhiteSpace(color) || !Color.TryFromHex(color, out _))
-                    {
-                        color = GetDeterministicHexColor(name);
-                    }
-
-                    if (!color.StartsWith("#"))
-                        color = "#" + color;
-
-                    return new BotInfo
-                    {
-                        Name = name,
-                        Creator = attr?.Creator ?? "Unknown",
-                        Color = color,
-                    };
-                }
-            );
-
-            var mapFilter = args.Length > 0 ? args[0] : null;
-
             var mapService = new CollectMapsService();
             var maps = mapService.LoadMaps(mapFolder);
-            if (!string.IsNullOrEmpty(mapFilter))
-            {
-                maps = maps.Where(m => m.Name.Contains(mapFilter, StringComparison.OrdinalIgnoreCase)).ToArray();
-            }
 
             if (maps.Length == 0)
             {
-                AnsiConsole.MarkupLine(
-                    $"[red]No maps found in:[/] {mapFolder}{(string.IsNullOrEmpty(mapFilter) ? "" : $" matching '{mapFilter}'")}"
-                );
+                AnsiConsole.MarkupLine($"[red]No maps found in:[/] {mapFolder}");
                 return;
             }
 
             var botGroups = botTypes.SelectMany(x => botTypes.Where(y => y != x), (x, y) => new[] { x, y }).ToList();
             var games = maps.SelectMany(map => botGroups, (map, group) => new { Map = map, BotTypes = group }).ToList();
 
-            var visibleConsole = AnsiConsole.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(OriginalOut) });
+            // Channels aanmaken VOOR de host
+            var battleRequestChannel = Channel.CreateBounded<BattleRequest>(new BoundedChannelOptions(100)
+            {
+                FullMode = BoundedChannelFullMode.Wait
+            });
+            var gameResultChannel = Channel.CreateUnbounded<GameResult>();
+
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureServices(services =>
+                {
+                    // Dezelfde channel instances meegeven aan DI
+                    services.AddSingleton(battleRequestChannel.Reader);
+                    services.AddSingleton(gameResultChannel.Writer);
+
+                    // botTypes en maps meegeven zodat BattleService ze krijgt
+                    services.AddSingleton(botTypes);
+                    services.AddSingleton(maps);
+
+                    services.AddHostedService<BattleService>();
+                })
+                .Build();
+
+            await host.StartAsync();
+
+            var visibleConsole =
+                AnsiConsole.Create(new AnsiConsoleSettings
+                {
+                    Out = new AnsiConsoleOutput(OriginalOut)
+                });
             Console.SetOut(TextWriter.Null);
             var sw = System.Diagnostics.Stopwatch.StartNew();
+
             await visibleConsole
                 .Progress()
                 .AutoRefresh(true)
-                .Columns(
-                    [
-                        new TaskDescriptionColumn(),
-                        new ProgressBarColumn(),
-                        new PercentageColumn(),
-                        new ItemCountColumn(),
-                        new RemainingTimeColumn(),
-                        new SpinnerColumn(Spinner.Known.Dots),
-                    ]
-                )
+                .Columns([
+                    new TaskDescriptionColumn(),
+                    new ProgressBarColumn(),
+                    new PercentageColumn(),
+                    new ItemCountColumn(),
+                    new RemainingTimeColumn(),
+                    new SpinnerColumn(Spinner.Known.Dots),
+                ])
                 .StartAsync(async ctx =>
                 {
                     var progressTask = ctx.AddTask("[green]Simulating Games[/]", true, games.Count);
-
-                    await Parallel.ForEachAsync(
-                        games,
-                        async (game, ct) =>
+                    var resultConsumer = Task.Run(async () =>
+                    {
+                        await foreach (var result in gameResultChannel.Reader.ReadAllAsync())
                         {
-                            var botInstances = game.BotTypes.Select(type => (IPlayerBot)Activator.CreateInstance(type)!).ToArray();
-                            var gameBotInfos = new List<BotInfo>();
-                            for (int i = 0; i < game.BotTypes.Length; i++)
-                            {
-                                var info = botMetadata[game.BotTypes[i]];
-                                gameBotInfos.Add(
-                                    new BotInfo
-                                    {
-                                        OwnerId = i,
-                                        Name = info.Name,
-                                        Creator = info.Creator,
-                                        Color = info.Color,
-                                    }
-                                );
-                            }
-
-                            await RunGame(botInstances, game.Map, gameBotInfos.ToArray());
+                            GameResults.Add(result);
                             progressTask.Increment(1);
                         }
-                    );
+                    });
+
+                    await battleRequestChannel.Writer.WriteAsync(new BattleRequest
+                    {
+                        MaxTurns = MaxTurnsForStaleMate,
+                        Games = games.Select(g => new Game
+                        {
+                            Map = g.Map,
+                            BotTypes = g.BotTypes
+                        }).ToList()
+                    });
+
+                    battleRequestChannel.Writer.Complete();
+                    await resultConsumer;
+
+                    await host.StopAsync();
                 });
 
             sw.Stop();
 
-            var totalStalemates = GameResults.Count(r => r.IsStalemate);
             Console.SetOut(OriginalOut);
+            var totalStalemates = GameResults.Count(r => r.IsStalemate);
             AnsiConsole.MarkupLine($"[green]Simulations finished in {sw.Elapsed.TotalSeconds:F2}s[/]");
             AnsiConsole.MarkupLine($"[yellow]Total stalemates:[/] {totalStalemates}");
 
@@ -164,41 +161,6 @@ class Program
         return $"{hashBytes[0]:X2}{hashBytes[1]:X2}{hashBytes[2]:X2}";
     }
 
-    private static async Task RunGame(IPlayerBot[] bots, World selectedMap, BotInfo[] botInfos)
-    {
-        var runner = new GameRunner(selectedMap, bots);
-        GameTurn? lastTurn = null;
-        int turnCount = 0;
-        bool hasCrashed = false;
-        bool isStalemate = false;
-
-        try
-        {
-            for (; turnCount < MaxTurnsForStaleMate && !runner.Finished; turnCount++)
-            {
-                runner.DoTurn();
-            }
-
-            lastTurn = runner.GetTurns().Last();
-        }
-        catch (Exception e)
-        {
-            hasCrashed = true;
-            lastTurn = runner.GetTurns().LastOrDefault();
-        }
-
-        GameResults.Add(
-            new GameResult()
-            {
-                MapName = selectedMap.Name,
-                Bots = lastTurn?.Tanks.ToList() ?? [],
-                BotInfo = botInfos.ToList(),
-                TurnsPlayed = turnCount,
-                HasCrashed = hasCrashed,
-                IsStalemate = isStalemate || turnCount >= MaxTurnsForStaleMate,
-            }
-        );
-    }
 
     private class AppConfig
     {

@@ -1,0 +1,6 @@
+@TankDestroyer.AutoBattler.API_HostAddress = http://localhost:5212
+
+GET {{TankDestroyer.AutoBattler.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

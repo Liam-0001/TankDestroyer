@@ -1,6 +1,6 @@
 ﻿using TankDestroyer.Engine;
 
-namespace TankDestroyer.AutoBattler;
+namespace TankDestroyer.AutoBattler.Objects;
 
 public class GameResult
 {

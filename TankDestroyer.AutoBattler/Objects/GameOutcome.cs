@@ -1,4 +1,4 @@
-namespace TankDestroyer.AutoBattler;
+namespace TankDestroyer.AutoBattler.Objects;
 
 public enum GameOutcome
 {
