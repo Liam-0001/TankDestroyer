@@ -11,11 +11,3 @@ public class GameResult
     public bool HasCrashed { get; set; }
     public bool IsStalemate { get; set; }
 }
-
-public class BotInfo
-{
-    public int OwnerId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Creator { get; set; } = string.Empty;
-    public string Color { get; set; } = string.Empty;
-}
