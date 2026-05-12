@@ -10,7 +10,6 @@ namespace TankDestroyer.AutoBattler;
 class Program
 {
     public const int MaxTurnsForStaleMate = 200;
-    public const int StalematePositionThreshold = 2;
     public static ConcurrentBag<GameResult> GameResults = [];
     private static readonly TextWriter OriginalOut = Console.Out;
 
