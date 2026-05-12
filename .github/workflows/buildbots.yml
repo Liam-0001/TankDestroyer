@@ -3,6 +3,9 @@
 
 name: Build Bots
 
+permissions:
+  contents: write
+
 on:
   push:
       branches: [ "master" ]
