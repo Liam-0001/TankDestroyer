@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using TankDestroyer.API;
 using TankDestroyer.Engine;
+using TankDestroyer.Engine.Services.Instantiate;
 
 namespace TankDestroyer.AutoBattler;
 
@@ -39,7 +40,8 @@ class Program
                 return;
             }
 
-            var botTypes = CollectBotsServices.LoadBots(botFolder);
+            var botService = new CollectBotsService();
+            var botTypes = botService.LoadBots(botFolder);
             if (botTypes.Length == 0)
             {
                 AnsiConsole.MarkupLine($"[red]No bots found in:[/] {botFolder}");
@@ -73,7 +75,8 @@ class Program
 
             var mapFilter = args.Length > 0 ? args[0] : null;
 
-            var maps = CollectMapsService.LoadMaps(mapFolder);
+            var mapService = new CollectMapsService();
+            var maps = mapService.LoadMaps(mapFolder);
             if (!string.IsNullOrEmpty(mapFilter))
             {
                 maps = maps.Where(m => m.Name.Contains(mapFilter, StringComparison.OrdinalIgnoreCase)).ToArray();
