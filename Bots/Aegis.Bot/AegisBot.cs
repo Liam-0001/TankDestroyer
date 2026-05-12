@@ -34,7 +34,7 @@ public class AegisBot : IPlayerBot
 
         var current = new Position(me.X, me.Y);
         var bestMove = ChooseMove(turnContext, current, enemies);
-        Console.WriteLine($"Aegis: Moving to ({bestMove.Position.X},{bestMove.Position.Y}) from ({current.X},{current.Y})");
+       // Console.WriteLine($"Aegis: Moving to ({bestMove.Position.X},{bestMove.Position.Y}) from ({current.X},{current.Y})");
         if (bestMove.Direction.HasValue)
         {
             turnContext.MoveTank(bestMove.Direction.Value);
@@ -44,7 +44,7 @@ public class AegisBot : IPlayerBot
         var shot = ChooseShot(turnContext, firingPosition, enemies);
         if (shot.HasValue)
         {
-            Console.WriteLine($"Aegis: Shooting at {shot.Value}");
+           // Console.WriteLine($"Aegis: Shooting at {shot.Value}");
             turnContext.RotateTurret(shot.Value);
             turnContext.Fire();
             return;
@@ -55,7 +55,7 @@ public class AegisBot : IPlayerBot
             .First();
 
         var turretDir = DirectionTo(firingPosition, new Position(nearest.X, nearest.Y));
-        Console.WriteLine($"Aegis: Rotating turret to {turretDir} towards nearest enemy");
+       // Console.WriteLine($"Aegis: Rotating turret to {turretDir} towards nearest enemy");
         turnContext.RotateTurret(turretDir);
     }
 

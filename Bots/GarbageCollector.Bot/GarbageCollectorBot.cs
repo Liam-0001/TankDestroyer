@@ -60,7 +60,7 @@ public class GarbageCollectorBot : IPlayerBot
         writer.WriteLine($"║ Process started at {DateTime.Now:yyyy-MM-dd HH:mm:ss}                       ║");
         writer.WriteLine($"║ Log file: {LogPath,-50} ║");
         writer.WriteLine($"╚══════════════════════════════════════════════════════════════╝");
-        Console.WriteLine($"[GarbageCollector] Log file: {LogPath}");
+       // Console.WriteLine($"[GarbageCollector] Log file: {LogPath}");
         return writer;
 #else
         return null;
