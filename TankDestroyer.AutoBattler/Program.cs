@@ -93,10 +93,10 @@ class Program
             var botGroups = botTypes.SelectMany(x => botTypes.Where(y => y != x), (x, y) => new[] { x, y }).ToList();
             var games = maps.SelectMany(map => botGroups, (map, group) => new { Map = map, BotTypes = group }).ToList();
 
+            var visibleConsole = AnsiConsole.Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(OriginalOut) });
             Console.SetOut(TextWriter.Null);
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            await AnsiConsole
-                .Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(OriginalOut) })
+            await visibleConsole
                 .Progress()
                 .AutoRefresh(true)
                 .Columns(
