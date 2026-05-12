@@ -12,7 +12,7 @@ public class HDJOBot : IPlayerBot
     {
         var enumValues = Enum.GetValues<TurretDirection>();
         var enumDirectionValues = Enum.GetValues<Direction>();
-        
+        //Testje
         turnContext.MoveTank(enumDirectionValues[_random.Next(0, enumDirectionValues.Length)]);
         turnContext.RotateTurret(enumValues[_random.Next(0, enumValues.Length)]);
         turnContext.Fire();
