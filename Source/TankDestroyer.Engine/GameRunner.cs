@@ -70,7 +70,11 @@ public class GameRunner
                 if (tankAction is not MoveTankAction) continue;
                 
                 var tank = GetTanks().Single(c => c.OwnerId == tankAction.OwnerId && !c.Destroyed);
-                _tankService.Drown(tank);
+
+                if (_game.World.GetTile(tank.X, tank.Y).IsWater())
+                {
+                    _tankService.Drown(tank);
+                }
             }
         }
 

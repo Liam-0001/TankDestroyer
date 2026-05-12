@@ -11,10 +11,11 @@ public class TankService(Game game) : ITankService
     }
 
     public Tank[] GetTanks() => _game.Tanks;
-    
+
     public bool Drown(Tank tank)
     {
         tank.Drowned = true;
+        tank.Health = 0;
         return Destroy(tank);
     }
 }
