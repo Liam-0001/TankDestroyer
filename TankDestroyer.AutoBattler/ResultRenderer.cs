@@ -4,35 +4,29 @@ namespace TankDestroyer.AutoBattler;
 
 public class ResultRenderer
 {
-    private readonly IAnsiConsole _console;
-
-    public ResultRenderer(IAnsiConsole console)
-    {
-        _console = console;
-    }
-
     public void PrintResults(IEnumerable<GameResult> results)
     {
         var maps = results.Select(r => r.MapName).Distinct().ToList();
 
         if (maps.Count > 1)
         {
-            _console.MarkupLine($"[bold blue]Total[/]");
+            AnsiConsole.MarkupLine($"[bold blue]Total[/]");
             PrintStatsTable(results);
-            _console.WriteLine();
+            AnsiConsole.WriteLine();
         }
 
         foreach (var map in maps)
         {
-            _console.MarkupLine($"[bold blue]{map}[/]");
+            AnsiConsole.MarkupLine($"[bold blue]{map}[/]");
             PrintStatsTable(results.Where(r => r.MapName == map));
-            _console.WriteLine();
+            AnsiConsole.WriteLine();
         }
     }
 
     private void PrintStatsTable(IEnumerable<GameResult> results)
     {
-        var botStats = new Dictionary<string, (int Wins, int Losses, int Draws, int Stalemates, int Crashes, string Color, string Creator)>();
+        var botStats =
+            new Dictionary<string, (int Wins, int Losses, int Draws, int Stalemates, int Crashes, string Color, string Creator)>();
 
         foreach (var result in results)
         {
@@ -49,7 +43,6 @@ public class ResultRenderer
                 var stats = botStats[botInfo.Name];
                 var tank = result.Bots.FirstOrDefault(t => t.OwnerId == botInfo.OwnerId);
 
-                
                 if (result.HasCrashed)
                 {
                     stats.Crashes++;
@@ -102,6 +95,6 @@ public class ResultRenderer
             );
         }
 
-        _console.Write(table);
+        AnsiConsole.Write(table);
     }
 }

@@ -10,24 +10,19 @@ namespace TankDestroyer.AutoBattler;
 class Program
 {
     public const int MaxTurnsForStaleMate = 200;
-    public const int StalemateWindowSize = 20;
     public const int StalematePositionThreshold = 2;
     public static ConcurrentBag<GameResult> GameResults = [];
     private static readonly TextWriter OriginalOut = Console.Out;
-    private static readonly object ConsoleLock = new();
-    private static readonly IAnsiConsole SystemConsole = AnsiConsole.Create(
-        new AnsiConsoleSettings { Out = new AnsiConsoleOutput(OriginalOut) }
-    );
 
     static async Task Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
-        SystemConsole.Cursor.Hide();
+        AnsiConsole.Cursor.Hide();
 
         try
         {
-            SystemConsole.Clear();
-            SystemConsole.MarkupLine($"[blue]Loading application[/]");
+            AnsiConsole.Clear();
+            AnsiConsole.MarkupLine($"[blue]Loading application[/]");
 
             var config = LoadConfig();
             var botFolder = ResolvePath("..\\Build\\Bots", "..\\Bots");
@@ -35,20 +30,20 @@ class Program
 
             if (!Directory.Exists(botFolder))
             {
-                SystemConsole.MarkupLine($"[red]Bot folder not found:[/] {botFolder}");
+                AnsiConsole.MarkupLine($"[red]Bot folder not found:[/] {botFolder}");
                 return;
             }
 
             if (!Directory.Exists(mapFolder))
             {
-                SystemConsole.MarkupLine($"[red]Map folder not found:[/] {mapFolder}");
+                AnsiConsole.MarkupLine($"[red]Map folder not found:[/] {mapFolder}");
                 return;
             }
 
             var botTypes = CollectBotsServices.LoadBots(botFolder);
             if (botTypes.Length == 0)
             {
-                SystemConsole.MarkupLine($"[red]No bots found in:[/] {botFolder}");
+                AnsiConsole.MarkupLine($"[red]No bots found in:[/] {botFolder}");
                 return;
             }
 
@@ -87,7 +82,7 @@ class Program
 
             if (maps.Length == 0)
             {
-                SystemConsole.MarkupLine(
+                AnsiConsole.MarkupLine(
                     $"[red]No maps found in:[/] {mapFolder}{(string.IsNullOrEmpty(mapFilter) ? "" : $" matching '{mapFilter}'")}"
                 );
                 return;
@@ -98,19 +93,19 @@ class Program
 
             Console.SetOut(TextWriter.Null);
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            await SystemConsole
+            await AnsiConsole
+                .Create(new AnsiConsoleSettings { Out = new AnsiConsoleOutput(OriginalOut) })
                 .Progress()
                 .AutoRefresh(true)
                 .Columns(
-                    new ProgressColumn[]
-                    {
+                    [
                         new TaskDescriptionColumn(),
                         new ProgressBarColumn(),
                         new PercentageColumn(),
                         new ItemCountColumn(),
                         new RemainingTimeColumn(),
                         new SpinnerColumn(Spinner.Known.Dots),
-                    }
+                    ]
                 )
                 .StartAsync(async ctx =>
                 {
@@ -146,18 +141,18 @@ class Program
 
             var totalStalemates = GameResults.Count(r => r.IsStalemate);
             Console.SetOut(OriginalOut);
-            SystemConsole.MarkupLine($"[green]Simulations finished in {sw.Elapsed.TotalSeconds:F2}s[/]");
-            SystemConsole.MarkupLine($"[yellow]Total stalemates:[/] {totalStalemates}");
+            AnsiConsole.MarkupLine($"[green]Simulations finished in {sw.Elapsed.TotalSeconds:F2}s[/]");
+            AnsiConsole.MarkupLine($"[yellow]Total stalemates:[/] {totalStalemates}");
 
-            var renderer = new ResultRenderer(SystemConsole);
+            var renderer = new ResultRenderer();
             renderer.PrintResults(GameResults);
 
-            SystemConsole.MarkupLine("[bold green]Game Finished![/]");
+            AnsiConsole.MarkupLine("[bold green]Game Finished![/]");
         }
         finally
         {
             Console.SetOut(OriginalOut);
-            SystemConsole.Cursor.Show();
+            AnsiConsole.Cursor.Show();
         }
     }
 
@@ -174,34 +169,18 @@ class Program
         int turnCount = 0;
         bool hasCrashed = false;
         bool isStalemate = false;
-        var detector = new StalemateDetector();
 
         try
         {
             for (; turnCount < MaxTurnsForStaleMate && !runner.Finished; turnCount++)
             {
                 runner.DoTurn();
-
-                var currentTanks = runner.GetTanks();
-                if (detector.IsStalemate(currentTanks))
-                {
-                    isStalemate = true;
-                    break;
-                }
             }
 
             lastTurn = runner.GetTurns().Last();
         }
         catch (Exception e)
         {
-            /*
-            lock (ConsoleLock)
-            {
-                var prevOut = Console.Out;
-                Console.SetOut(OriginalOut);
-                SystemConsole.WriteException(e, new ExceptionSettings { Format = ExceptionFormats.ShowLinks });
-                Console.SetOut(prevOut);
-            }*/
             hasCrashed = true;
             lastTurn = runner.GetTurns().LastOrDefault();
         }
