@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://bl4fuauhis4b1"]
+
+[ext_resource type="Script" uid="uid://bb3k15o7q5nl4" path="res://Scripts/PlayerWinControl.cs" id="1_sjexp"]
+
+[node name="PlayerWin" type="Control" unique_id=1217210128 node_paths=PackedStringArray("Label", "PlayAgain")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sjexp")
+Label = NodePath("VerticalWinContainer/CongratulationText")
+PlayAgain = NodePath("VerticalWinContainer/PlayAgainButton")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=316895525]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="VerticalWinContainer" type="VBoxContainer" parent="." unique_id=174602861]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CongratulationText" type="RichTextLabel" parent="VerticalWinContainer" unique_id=981296008]
+layout_mode = 2
+
+[node name="PlayAgainButton" type="Button" parent="VerticalWinContainer" unique_id=2057955014]
+layout_mode = 2

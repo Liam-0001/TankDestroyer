@@ -16,6 +16,7 @@
 [ext_resource type="Script" uid="uid://ccbjb6k5tms7f" path="res://UINode.cs" id="11_efxa6"]
 [ext_resource type="ArrayMesh" uid="uid://bguidamuojhp6" path="res://Buildings/building_08_smooth.obj" id="13_kq58d"]
 [ext_resource type="Shader" uid="uid://tvppgsis5o00" path="res://water.gdshader" id="13_vivmo"]
+[ext_resource type="PackedScene" uid="uid://bxjtilaxmjlt5" path="res://Scenes/PlayerWin.tscn" id="17_yaehf"]
 
 [sub_resource type="ORMMaterial3D" id="ORMMaterial3D_ycdy4"]
 albedo_texture = ExtResource("6_dg77c")
@@ -194,16 +195,17 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("11_efxa6")
-StartButton = NodePath("MarginContainer/PanelContainer/VBoxContainer/Button")
-PlayButton = NodePath("MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer2/Button4")
-NextButton = NodePath("MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer2/Button2")
-PreviousButton = NodePath("MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer2/Button3")
-PauseButton = NodePath("MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer2/Button")
-MapButton = NodePath("MarginContainer/PanelContainer/VBoxContainer/GridContainer/OptionButton")
-PlayersContainer = NodePath("MarginContainer/PanelContainer/VBoxContainer/GridContainer2")
-PlayerScoresContainer = NodePath("MarginContainer3/PanelContainer/VBoxContainer/VBoxContainer")
+StartButton = NodePath("MarginContainer/PanelContainer/GameControlContainer/StartButton")
+PlayButton = NodePath("MarginContainer2/PanelContainer/VboxContainer/HBoxContainer2/PlayBtn")
+NextButton = NodePath("MarginContainer2/PanelContainer/VboxContainer/HBoxContainer2/OneTurnForwardBtn")
+PreviousButton = NodePath("MarginContainer2/PanelContainer/VboxContainer/HBoxContainer2/OneTurnBackBtn")
+PauseButton = NodePath("MarginContainer2/PanelContainer/VboxContainer/HBoxContainer2/PauseBtn")
+MapButton = NodePath("MarginContainer/PanelContainer/GameControlContainer/MapSelection/MapOptions")
+PlayersContainer = NodePath("MarginContainer/PanelContainer/GameControlContainer/GridContainer2")
+PlayerScoresContainer = NodePath("MarginContainer3/PanelContainer/VboxContainer/PlayerScores")
 GameNode = NodePath("../Game")
-TurnSlider = NodePath("MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer/VBoxContainer/HSlider")
+TurnSlider = NodePath("MarginContainer2/PanelContainer/VboxContainer/HBoxContainer/VBoxContainer/HSlider")
+PlayerWinControlScene = ExtResource("17_yaehf")
 
 [node name="MarginContainer" type="MarginContainer" parent="Control" unique_id=356440238]
 layout_mode = 0
@@ -216,30 +218,30 @@ theme_override_constants/margin_top = 10
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_4c57u")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Control/MarginContainer/PanelContainer" unique_id=1103238768]
+[node name="GameControlContainer" type="VBoxContainer" parent="Control/MarginContainer/PanelContainer" unique_id=1103238768]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Control/MarginContainer/PanelContainer/VBoxContainer" unique_id=1316344554]
+[node name="Title" type="Label" parent="Control/MarginContainer/PanelContainer/GameControlContainer" unique_id=1316344554]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "Nieuw spel"
 
-[node name="GridContainer" type="GridContainer" parent="Control/MarginContainer/PanelContainer/VBoxContainer" unique_id=402704475]
+[node name="MapSelection" type="GridContainer" parent="Control/MarginContainer/PanelContainer/GameControlContainer" unique_id=402704475]
 layout_mode = 2
 columns = 2
 
-[node name="Label2" type="Label" parent="Control/MarginContainer/PanelContainer/VBoxContainer/GridContainer" unique_id=896918240]
+[node name="MapLabel" type="Label" parent="Control/MarginContainer/PanelContainer/GameControlContainer/MapSelection" unique_id=896918240]
 layout_mode = 2
 text = "Map"
 
-[node name="OptionButton" type="OptionButton" parent="Control/MarginContainer/PanelContainer/VBoxContainer/GridContainer" unique_id=1243506461]
+[node name="MapOptions" type="OptionButton" parent="Control/MarginContainer/PanelContainer/GameControlContainer/MapSelection" unique_id=1243506461]
 layout_mode = 2
 
-[node name="GridContainer2" type="GridContainer" parent="Control/MarginContainer/PanelContainer/VBoxContainer" unique_id=981781080]
+[node name="GridContainer2" type="GridContainer" parent="Control/MarginContainer/PanelContainer/GameControlContainer" unique_id=981781080]
 layout_mode = 2
 columns = 2
 
-[node name="Button" type="Button" parent="Control/MarginContainer/PanelContainer/VBoxContainer" unique_id=1333100491]
+[node name="StartButton" type="Button" parent="Control/MarginContainer/PanelContainer/GameControlContainer" unique_id=1333100491]
 layout_mode = 2
 text = "Start spel"
 
@@ -261,42 +263,42 @@ theme_override_constants/margin_bottom = 10
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_efxa6")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Control/MarginContainer2/PanelContainer" unique_id=1693851320]
+[node name="VboxContainer" type="VBoxContainer" parent="Control/MarginContainer2/PanelContainer" unique_id=1693851320]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Control/MarginContainer2/PanelContainer/VBoxContainer" unique_id=811909219]
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/MarginContainer2/PanelContainer/VboxContainer" unique_id=811909219]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Control/MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer" unique_id=575243214]
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/MarginContainer2/PanelContainer/VboxContainer/HBoxContainer" unique_id=575243214]
 layout_mode = 2
 
-[node name="HSlider" type="HSlider" parent="Control/MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer/VBoxContainer" unique_id=1180876677]
+[node name="HSlider" type="HSlider" parent="Control/MarginContainer2/PanelContainer/VboxContainer/HBoxContainer/VBoxContainer" unique_id=1180876677]
 custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Control/MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer/VBoxContainer" unique_id=335558508]
+[node name="Label" type="Label" parent="Control/MarginContainer2/PanelContainer/VboxContainer/HBoxContainer/VBoxContainer" unique_id=335558508]
 layout_mode = 2
 text = "Turns"
 horizontal_alignment = 1
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="Control/MarginContainer2/PanelContainer/VBoxContainer" unique_id=873585944]
+[node name="HBoxContainer2" type="HBoxContainer" parent="Control/MarginContainer2/PanelContainer/VboxContainer" unique_id=873585944]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="Button3" type="Button" parent="Control/MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer2" unique_id=852087717]
+[node name="OneTurnBackBtn" type="Button" parent="Control/MarginContainer2/PanelContainer/VboxContainer/HBoxContainer2" unique_id=852087717]
 layout_mode = 2
 text = "|<"
 
-[node name="Button" type="Button" parent="Control/MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer2" unique_id=476732048]
+[node name="PauseBtn" type="Button" parent="Control/MarginContainer2/PanelContainer/VboxContainer/HBoxContainer2" unique_id=476732048]
 layout_mode = 2
 text = "||"
 
-[node name="Button4" type="Button" parent="Control/MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer2" unique_id=1306361875]
+[node name="PlayBtn" type="Button" parent="Control/MarginContainer2/PanelContainer/VboxContainer/HBoxContainer2" unique_id=1306361875]
 layout_mode = 2
 text = ">"
 
-[node name="Button2" type="Button" parent="Control/MarginContainer2/PanelContainer/VBoxContainer/HBoxContainer2" unique_id=1892562541]
+[node name="OneTurnForwardBtn" type="Button" parent="Control/MarginContainer2/PanelContainer/VboxContainer/HBoxContainer2" unique_id=1892562541]
 layout_mode = 2
 text = ">|"
 
@@ -315,15 +317,15 @@ theme_override_constants/margin_right = 10
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_4c57u")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Control/MarginContainer3/PanelContainer" unique_id=44206087]
+[node name="VboxContainer" type="VBoxContainer" parent="Control/MarginContainer3/PanelContainer" unique_id=44206087]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Control/MarginContainer3/PanelContainer/VBoxContainer" unique_id=1663317888]
+[node name="Label" type="Label" parent="Control/MarginContainer3/PanelContainer/VboxContainer" unique_id=1663317888]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Players"
 
-[node name="VBoxContainer" type="GridContainer" parent="Control/MarginContainer3/PanelContainer/VBoxContainer" unique_id=1265982104]
+[node name="PlayerScores" type="GridContainer" parent="Control/MarginContainer3/PanelContainer/VboxContainer" unique_id=1265982104]
 layout_mode = 2
 theme_override_constants/h_separation = 10
 columns = 3

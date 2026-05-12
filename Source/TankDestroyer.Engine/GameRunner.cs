@@ -81,7 +81,7 @@ public class GameRunner
         turn.MunitionBoxes = _game.MunitionBoxes.Select(m => m.Clone()).ToArray();
         _ammoService.PickupAmmo(turn);
         _ammoService.SpawnAmmo(5);
-        turn.MunitionBoxes = _game.MunitionBoxes.Select(m => m.Clone()).ToArray(); 
+        turn.MunitionBoxes = _game.MunitionBoxes.Select(m => m.Clone()).ToArray();
         _game.Turns.Add(turn);
 
         Finished = _game.Tanks.Length > 1 && _game.Tanks.Count(c => c.Destroyed == false) <= 1;
@@ -246,5 +246,18 @@ public class GameRunner
         }
 
         return _game.Turns[currentIndex + 1];
+    }
+
+    public string GetWinnerText(ITank tank)
+    {
+        var attribute = _game.Players.Single(c => c.Id == tank.OwnerId).PlayerImplementation.GetType()
+            .GetCustomAttribute<BotAttribute>();
+
+        if (attribute == null) return "It's a tie!";
+        
+        var name = attribute.Name;
+        var creator = attribute.Creator;
+
+        return $"{creator} with bot: {name} won!";
     }
 }
