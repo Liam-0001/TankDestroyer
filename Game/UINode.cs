@@ -7,6 +7,7 @@ using Godot;
 using TankDestroyer.API;
 using TankDestroyer.Engine;
 using TankDestroyer.Engine.Services.Instantiate;
+using TankDestroyer.Scripts;
 
 namespace TankDestroyer;
 
@@ -22,6 +23,8 @@ public partial class UINode : Control
 	[Export] public Control PlayerScoresContainer { get; set; }
 	[Export] public GameNode GameNode { get; set; }
 	[Export] public HSlider TurnSlider { get; set; }
+	[Export] public PackedScene PlayerWinControlScene { get; set; }
+	private bool _winShown = false;
 
 	public List<BotSelection> BotSelections { get; set; } = new();
 
@@ -38,9 +41,7 @@ public partial class UINode : Control
 	{
 		ConfigFile file =
 			System.Text.Json.JsonSerializer.Deserialize<ConfigFile>(System.IO.File.ReadAllText("config.json"));
-		BotTypes = _collectBotService.LoadBots(Path.GetFullPath(file.BotFolder))
-			.OrderBy(botType => botType.GetCustomAttribute<BotAttribute>()?.Name)
-			.ToArray();
+		BotTypes = _collectBotService.LoadBots(Path.GetFullPath(file.BotFolder));
 		Maps = _collectMapsService.LoadMaps(Path.GetFullPath(file.MapFolder));
 		base._Ready();
 		MapButton.AddItem("Random generated", 0);
@@ -71,10 +72,8 @@ public partial class UINode : Control
 		{
 			return;
 		}
-		else
-		{
-			GameNode.SetStepIndex((int)value);
-		}
+
+		GameNode.SetStepIndex((int)value);
 	}
 
 	private void PreviousButtonOnPressed()
@@ -106,11 +105,31 @@ public partial class UINode : Control
 	{
 		TurnSlider.MaxValue = GameNode.GetRunner().GetTurns().Length - 1;
 		TurnSlider.Value = GameNode.GetCurrentTurnIndex();
+		OnGameFinished();
 	}
 
-	public override void _PhysicsProcess(double delta)
+	private void OnGameFinished()
 	{
-		base._PhysicsProcess(delta);
+		if (!GameNode.GetRunner().Finished) return;
+		if (_winShown) return;
+		_winShown = true;
+
+		var tank = GameNode.GetPlayers()
+			.Select(p=> p.Tank)
+			.FirstOrDefault(t=>!t.Destroyed);
+		var text = "We got a Tie!";
+		if (tank != null) text = GameNode.GetRunner().GetWinnerText(tank);
+
+		var canvasLayer = new CanvasLayer();
+		GetTree().Root.AddChild(canvasLayer);
+
+		var scene = PlayerWinControlScene.Instantiate();
+		canvasLayer.AddChild(scene);
+
+		var control = scene as PlayerWinControl;
+		GD.Print("Control cast: " + (control != null ? "OK" : "NULL")); // debug
+	
+		control?.Setup(text,"Play again");
 	}
 
 	private void PlayButtonPressed()
@@ -158,6 +177,7 @@ public partial class UINode : Control
 		{
 			world = Maps[MapButton.Selected - 1];
 		}
+
 		var runner = new GameRunner(world, bots.ToArray());
 		GameNode.StartGame(runner);
 
@@ -182,15 +202,16 @@ public partial class UINode : Control
 			};
 
 			var color = Color.FromHtml(hexColor);
-			
+
 			nameLabel.AddThemeColorOverride("font_color", color);
 			creatorLabel.AddThemeColorOverride("font_color", color);
 			healthLabel.AddThemeColorOverride("font_color", color);
-			
+
 			PlayerScoresContainer.AddChild(nameLabel);
 			PlayerScoresContainer.AddChild(creatorLabel);
 			PlayerScoresContainer.AddChild(healthLabel);
 			_tankHealthMapping.Add(player.Tank.OwnerId, healthLabel);
+			_winShown = false;
 		}
 	}
 
@@ -220,7 +241,7 @@ public partial class UINode : Control
 		{
 			var botSelection = BotSelections[i];
 			var playerIndex = new Label() { Text = (i + 1).ToString() };
-			
+
 			PlayersContainer.AddChild(playerIndex);
 			OptionButton optionButton = new();
 			optionButton.AddItem("<geen>");
@@ -231,15 +252,15 @@ public partial class UINode : Control
 			}
 			else
 			{
-				var hexColor =botSelection.SelectedBot.GetCustomAttribute<BotAttribute>()?.Color;
+				var hexColor = botSelection.SelectedBot.GetCustomAttribute<BotAttribute>()?.Color;
 				optionButton.AddThemeColorOverride("font_color", Color.FromHtml(hexColor));
 			}
-			
+
 			foreach (var botType in BotTypes)
 			{
 				var name = botType.GetCustomAttribute<BotAttribute>()?.Name;
 				var creator = botType.GetCustomAttribute<BotAttribute>()?.Creator;
-				
+
 				var label = $"{name} ({creator})";
 				optionButton.AddItem(label);
 			}
@@ -254,7 +275,7 @@ public partial class UINode : Control
 				}
 
 				botSelection.SelectedBot = BotTypes[index - 1];
-				var hexColor =botSelection.SelectedBot.GetCustomAttribute<BotAttribute>()?.Color;
+				var hexColor = botSelection.SelectedBot.GetCustomAttribute<BotAttribute>()?.Color;
 				optionButton.AddThemeColorOverride("font_color", Color.FromHtml(hexColor));
 			};
 
@@ -266,6 +287,7 @@ public partial class UINode : Control
 			{
 				optionButton.Selected = BotTypes.IndexOf(botSelection.SelectedBot) + 1;
 			}
+
 			PlayersContainer.AddChild(optionButton);
 		}
 	}

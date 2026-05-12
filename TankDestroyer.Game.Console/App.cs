@@ -17,6 +17,7 @@ public class App(IConfigLoader loader) : IApp
     {
         System.Console.OutputEncoding = Encoding.UTF8;
         AnsiConsole.Cursor.Hide();
+        var playAgain = true;
 
         try
         {
@@ -26,61 +27,84 @@ public class App(IConfigLoader loader) : IApp
 
             var initialConfig = _loader.LoadConfig();
             if (initialConfig == null) return;
-            
-            var selectedMap = SelectMap(initialConfig.Worlds);
-            var selectedBotTypes = SelectBots(initialConfig.Bots, selectedMap.SpawnPoints.Length);
 
-            var bots = selectedBotTypes
-                .Select(type => (IPlayerBot)Activator.CreateInstance(type)!)
-                .ToArray();
-
-            var playerColors = new Dictionary<int, Color>();
-            var playerLabels = new Dictionary<int, string>();
-            for (var i = 0; i < selectedBotTypes.Count; i++)
+            while (playAgain)
             {
-                var attribute = selectedBotTypes[i].GetCustomAttribute<BotAttribute>();
-                var colorHex = attribute?.Color ?? "#808080";
+                var selectedMap = SelectMap(initialConfig.Worlds);
+                var selectedBotTypes = SelectBots(initialConfig.Bots, selectedMap.SpawnPoints.Length);
 
-                if (!Color.TryFromHex(colorHex, out var color))
+                var bots = selectedBotTypes
+                    .Select(type => (IPlayerBot)Activator.CreateInstance(type)!)
+                    .ToArray();
+
+                var playerColors = new Dictionary<int, Color>();
+                var playerLabels = new Dictionary<int, string>();
+                for (var i = 0; i < selectedBotTypes.Count; i++)
                 {
-                    color = Color.Grey;
-                }
+                    var attribute = selectedBotTypes[i].GetCustomAttribute<BotAttribute>();
+                    var colorHex = attribute?.Color ?? "#808080";
 
-                playerColors[i] = color;
-                playerLabels[i] = attribute?.Name ?? selectedBotTypes[i].Name;
-            }
-
-            var runner = new GameRunner(selectedMap, bots);
-            var renderer = new ConsoleRenderer();
-
-            GameTurn? previousTurn = null;
-            var initialTurn = runner.GetTurns().Last();
-            await renderer.AnimateTurn(initialTurn, null, selectedMap, playerColors, playerLabels);
-            previousTurn = initialTurn;
-
-            while (!runner.Finished)
-            {
-                var turnsToPlay = AskTurnsToPlay();
-                if (turnsToPlay <= 0)
-                {
-                    break;
-                }
-
-                for (var turnIndex = 0; turnIndex < turnsToPlay && !runner.Finished; turnIndex++)
-                {
-                    runner.DoTurn();
-                    var lastTurn = runner.GetTurns().Last();
-                    await renderer.AnimateTurn(lastTurn, previousTurn, selectedMap, playerColors, playerLabels);
-                    previousTurn = lastTurn;
-
-                    if (turnsToPlay > 1)
+                    if (!Color.TryFromHex(colorHex, out var color))
                     {
-                        await Task.Delay(500);
+                        color = Color.Grey;
+                    }
+
+                    playerColors[i] = color;
+                    playerLabels[i] = attribute?.Name ?? selectedBotTypes[i].Name;
+                }
+
+                var runner = new GameRunner(selectedMap, bots);
+                var renderer = new ConsoleRenderer();
+
+                GameTurn? previousTurn = null;
+                var initialTurn = runner.GetTurns().Last();
+                await renderer.AnimateTurn(initialTurn, null, selectedMap, playerColors, playerLabels);
+                previousTurn = initialTurn;
+
+
+                while (!runner.Finished)
+                {
+                    var turnsToPlay = AskTurnsToPlay();
+                    if (turnsToPlay == 0)
+                    {
+                        playAgain = false;
+                    }
+
+                    if (turnsToPlay <= 0)
+                    {
+                        break;
+                    }
+
+                    for (var turnIndex = 0; turnIndex < turnsToPlay && !runner.Finished; turnIndex++)
+                    {
+                        runner.DoTurn();
+                        var lastTurn = runner.GetTurns().Last();
+                        await renderer.AnimateTurn(lastTurn, previousTurn, selectedMap, playerColors, playerLabels);
+                        previousTurn = lastTurn;
+
+                        if (turnsToPlay > 1)
+                        {
+                            await Task.Delay(500);
+                        }
                     }
                 }
-            }
 
-            AnsiConsole.MarkupLine("[bold green]Game Finished![/]");
+                if (runner.Finished)
+                {
+                    AnsiConsole.Clear();
+                    var color = Color.FromHex("#FFD700");
+                    var winnerTank = runner.GetTanks().FirstOrDefault(tank => !tank.Destroyed);
+                    if (winnerTank == null)
+                    {
+                        AnsiConsole.MarkupLine($"[#{color.ToHex()}]It's a tie![/]");
+                        continue;
+                    }
+
+                    var text = runner.GetWinnerText(winnerTank);
+
+                    AnsiConsole.MarkupLine($"[#{color.ToHex()}]{text}[/]");
+                }
+            }
         }
         finally
         {
@@ -146,7 +170,7 @@ public class App(IConfigLoader loader) : IApp
         var choice = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
                 .Title("How many [green]turns[/] to play?")
-                .AddChoices(new[] { "1 turn", "X turns", "All remaining", "Quit" }));
+                .AddChoices(new[] { "1 turn", "X turns",  "All remaining", "Go back","Quit" }));
 
         switch (choice)
         {
@@ -156,6 +180,8 @@ public class App(IConfigLoader loader) : IApp
                 return AnsiConsole.Ask<int>("Number of turns:");
             case "All remaining":
                 return int.MaxValue;
+            case "Go back":
+                return -1;
             case "Quit":
             default:
                 return 0;
