@@ -29,6 +29,14 @@ public partial class TankNode : Node3D
         DestroyedTurretNode.Visible = true;
         Smoke.Visible = true;
     }
+    
+    public void DrownTank()
+    {
+        TurretNode.Visible = false;
+        DestroyedTurretNode.Visible = true;
+        Smoke.Visible = false;
+        GlobalPosition = new Vector3((Tank.X * 2f) + 1f, 0.5f, Tank.Y * 2f + 1f);
+    }
 
     private bool _initialized;
 
@@ -105,9 +113,14 @@ public partial class TankNode : Node3D
             this.TurretNode.GlobalRotationDegrees = new Vector3(0, targetRotation.Y, 0);
         }
 
-        if (Tank.Destroyed)
+        if (Tank.Destroyed && !Tank.Drowned) 
         {
             DestroyTurret();
+        }
+
+        if (Tank.Drowned)
+        {
+            DrownTank();
         }
     }
 }

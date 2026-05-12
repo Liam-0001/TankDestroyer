@@ -15,6 +15,7 @@ public class Tank : ITank
     public int OwnerId { get; set; }
     public int Ammo { get; set; }
     public int MaxAmmo { get; set; }
+    public bool Drowned { get; set; }
     public TurretDirection TurretDirection { get; set; } = TurretDirection.North;
     public bool Destroyed { get; set; }
     public bool Fired { get; set; }

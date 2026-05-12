@@ -11,6 +11,7 @@ public interface ITank
     int OwnerId { get;  }
     int Ammo { get; }
     int MaxAmmo { get; }
+    bool Drowned {get;}
 }
 
 [Flags]
