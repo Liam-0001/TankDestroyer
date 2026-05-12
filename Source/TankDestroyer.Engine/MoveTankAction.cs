@@ -97,8 +97,7 @@ public class MoveTankAction : TankAction
 
     private bool IsPassable(int tankX, int tankY, Game game)
     {
-        if (game.Tanks.Any(c => c.X == tankX && c.Y == tankY)
-            || game.World.GetTile(tankX, tankY).TileType == TileType.Water)
+        if (game.Tanks.Any(c => c.X == tankX && c.Y == tankY))
         {
             return false;
         }
