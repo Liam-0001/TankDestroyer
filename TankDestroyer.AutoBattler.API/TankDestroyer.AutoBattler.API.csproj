@@ -2,16 +2,23 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <OutputPath>..\..\Build</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="*" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TankDestroyer.AutoBattler\TankDestroyer.AutoBattler.csproj" />
+        <ProjectReference Include="..\Source\TankDestroyer.AutoBattler\TankDestroyer.AutoBattler.csproj" />
+        <ProjectReference Include="..\Source\TankDestroyer.Engine\TankDestroyer.Engine.csproj" />
     </ItemGroup>
 
 </Project>

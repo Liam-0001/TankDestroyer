@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Threading.Channels;
+using TankDestroyer.AutoBattler.Configuration;
 using TankDestroyer.AutoBattler.Console;
-using TankDestroyer.AutoBattler.Console.Configuration;
 using TankDestroyer.AutoBattler.Console.Extensions;
 using TankDestroyer.AutoBattler.Objects;
 using TankDestroyer.AutoBattler.Services;

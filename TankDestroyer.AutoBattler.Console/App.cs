@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading.Channels;
 using Microsoft.Extensions.Hosting;
 using Spectre.Console;
-using TankDestroyer.AutoBattler.Console.Configuration;
+using TankDestroyer.AutoBattler.Configuration;
 using TankDestroyer.AutoBattler.Objects;
 using TankDestroyer.Engine;
 using TankDestroyer.Engine.Services.Instantiate;

@@ -1,4 +1,4 @@
-namespace TankDestroyer.AutoBattler.Console.Configuration;
+namespace TankDestroyer.AutoBattler.Configuration;
 
 public class BattleConfiguration
 {
