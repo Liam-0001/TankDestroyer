@@ -33,12 +33,13 @@
   </Folder>
   <Folder Name="/Source/">
     <Project Path="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
+    <Project Path="Source/TankDestroyer.AutoBattler/TankDestroyer.AutoBattler.csproj" />
     <Project Path="Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj">
       <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     </Project>
   </Folder>
   <Project Path="TankDestroyer.AutoBattler.API/TankDestroyer.AutoBattler.API.csproj" />
-  <Project Path="TankDestroyer.AutoBattler/TankDestroyer.AutoBattler.csproj" Id="f6c46cdd-d841-4860-a7c2-2a906d016540" />
+  <Project Path="TankDestroyer.AutoBattler.Console/TankDestroyer.AutoBattler.Console.csproj" />
   <Project Path="TankDestroyer.Game.Console/TankDestroyer.Game.Console.csproj">
     <BuildDependency Project="Source/TankDestroyer.API/TankDestroyer.API.csproj" />
     <BuildDependency Project="Source/TankDestroyer.Engine/TankDestroyer.Engine.csproj" />

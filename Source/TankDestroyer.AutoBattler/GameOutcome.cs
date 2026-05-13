@@ -5,5 +5,5 @@ public enum GameOutcome
     Win,
     Loss,
     Draw,
-    Stalemate,
+    Stalemate
 }

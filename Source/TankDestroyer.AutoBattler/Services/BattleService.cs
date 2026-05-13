@@ -4,8 +4,6 @@ using Microsoft.Extensions.Hosting;
 using TankDestroyer.API;
 using TankDestroyer.AutoBattler.Objects;
 using TankDestroyer.Engine;
-using TankDestroyer.Engine.Services.Instantiate;
-using Game = TankDestroyer.AutoBattler.Objects.Game;
 
 namespace TankDestroyer.AutoBattler.Services;
 
@@ -17,8 +15,8 @@ public class BattleService(
     : BackgroundService
 {
     private readonly ChannelReader<BattleRequest> _battleChannelReader = battleChannelReader;
-    private readonly ChannelWriter<GameResult> _gameResultChannelWriter = gameResultChannelWriter;
     private readonly Type[] _botTypes = botTypes;
+    private readonly ChannelWriter<GameResult> _gameResultChannelWriter = gameResultChannelWriter;
     private readonly World[] _maps = maps;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,29 +41,26 @@ public class BattleService(
                 var name = attr?.Name ?? type.Name;
                 var color = attr?.Color ?? "#000000";
 
-                if (!color.StartsWith('#'))
-                {
-                    color = $"#{color}";
-                }
-                
+                if (!color.StartsWith('#')) color = $"#{color}";
+
                 return new BotInfo
                 {
                     Name = name,
                     Creator = attr?.Creator ?? "Unknown",
-                    Color = color,
+                    Color = color
                 };
             }
         );
 
         await Parallel.ForEachAsync(
-            source: _battleChannelReader.ReadAllAsync(stoppingToken),
-            parallelOptions: parallelRequestOptions,
-            body: async (request, ct) =>
+            _battleChannelReader.ReadAllAsync(stoppingToken),
+            parallelRequestOptions,
+            async (request, ct) =>
             {
                 await Parallel.ForEachAsync(
-                    source: request.Games,
-                    parallelOptions: parallelGamesOptions,
-                    body: async (game, ct) =>
+                    request.Games,
+                    parallelGamesOptions,
+                    async (game, ct) =>
                     {
                         var botInstances = game.BotTypes
                             .Select(type => (IPlayerBot)Activator.CreateInstance(type)!)
@@ -75,7 +70,7 @@ public class BattleService(
                             .Select(t => botMetadata[t])
                             .Select((info, i) => new BotInfo
                             {
-                                OwnerId = i, Name = info.Name, Creator = info.Creator, Color = info.Color,
+                                OwnerId = i, Name = info.Name, Creator = info.Creator, Color = info.Color
                             }).ToArray();
 
                         await RunGame(
@@ -95,16 +90,13 @@ public class BattleService(
     {
         var runner = new GameRunner(selectedMap, bots);
         GameTurn? lastTurn = null;
-        int turnCount = 0;
-        bool hasCrashed = false;
-        bool isStalemate = false;
+        var turnCount = 0;
+        var hasCrashed = false;
+        var isStalemate = false;
 
         try
         {
-            for (; turnCount < maxTurns && !runner.Finished; turnCount++)
-            {
-                runner.DoTurn();
-            }
+            for (; turnCount < maxTurns && !runner.Finished; turnCount++) runner.DoTurn();
 
             lastTurn = runner.GetTurns().Last();
         }
@@ -115,14 +107,14 @@ public class BattleService(
         }
 
         await _gameResultChannelWriter.WriteAsync(
-            new GameResult()
+            new GameResult
             {
                 MapName = selectedMap.Name,
                 Bots = lastTurn?.Tanks.ToList() ?? [],
                 BotInfo = botInfos.ToList(),
                 TurnsPlayed = turnCount,
                 HasCrashed = hasCrashed,
-                IsStalemate = isStalemate || turnCount >= maxTurns,
+                IsStalemate = isStalemate || turnCount >= maxTurns
             }
         );
     }

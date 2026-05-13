@@ -1,4 +1,4 @@
-﻿namespace TankDestroyer.AutoBattler.Objects;
+﻿namespace TankDestroyer.AutoBattler;
 
 public class BotInfo
 {

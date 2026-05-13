@@ -1,7 +1,6 @@
 using Spectre.Console;
-using TankDestroyer.AutoBattler.Objects;
 
-namespace TankDestroyer.AutoBattler;
+namespace TankDestroyer.AutoBattler.Console;
 
 public class ResultRenderer
 {
