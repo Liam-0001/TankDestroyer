@@ -14,13 +14,32 @@ Maak je eigen bot en maak een PR naar de hoofdtak.
    ```
 3. Bouw en voer de game uit met `dotnet`:
    ```bash
-   dotnet run
+   dotnet run -- "river"
    ```
+   (Supports partial names and is case-insensitive)
+   
 
 > Als je alleen de build wilt uitvoeren zonder meteen te draaien, gebruik:
 > ```bash
 > dotnet build
 > ```
+
+## Hoe de console autobattler te draaien
+
+1. Open een terminal in de repository map.
+2. Navigeer naar de console projectmap:
+   ```bash
+   cd TankDestroyer.Autobattler
+   ```
+3. Bouw en voer de game uit met `dotnet`:
+   ```bash
+   dotnet run
+   ```
+   of
+   ```bash
+   dotnet run -- ""
+   ```
+
 
 ## Hoe een nieuwe bot te maken
 
@@ -64,3 +83,6 @@ Maak je eigen bot en maak een PR naar de hoofdtak.
 - Kogels zijn gelimiteert tot 10, als deze op zijn zal er niet meer geschoten worden
 - Als het gemiddelde aantal kogels onder 5 zakt zal er ammo gespawnt worden beginnende bij de speler die het verste weg is van ammo
 - Ammo word gespawnt op een tile die volledig vrij is in het open
+- Wanneer een kogel een gebouw of boom raakt verdwijnt deze van de map en word het een gras tegel
+- Tanks die in het water terecht komen gaan automatisch dood
+
