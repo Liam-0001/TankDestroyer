@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <OutputPath>..\..\Build</OutputPath>
+        <OutputPath>..\Build</OutputPath>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     </PropertyGroup>

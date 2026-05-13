@@ -89,32 +89,30 @@ public class BattleService(
     private async Task RunGame(IPlayerBot[] bots, World selectedMap, BotInfo[] botInfos, int maxTurns)
     {
         var runner = new GameRunner(selectedMap, bots);
-        GameTurn? lastTurn = null;
         var turnCount = 0;
         var hasCrashed = false;
-        var isStalemate = false;
 
         try
         {
             for (; turnCount < maxTurns && !runner.Finished; turnCount++) runner.DoTurn();
-
-            lastTurn = runner.GetTurns().Last();
         }
         catch (Exception e)
         {
             hasCrashed = true;
-            lastTurn = runner.GetTurns().LastOrDefault();
         }
+
+        var finalTanks = runner.GetTanks().ToList();
+        var isStalemate = !hasCrashed && turnCount >= maxTurns;
 
         await _gameResultChannelWriter.WriteAsync(
             new GameResult
             {
                 MapName = selectedMap.Name,
-                Bots = lastTurn?.Tanks.ToList() ?? [],
+                Bots = finalTanks,
                 BotInfo = botInfos.ToList(),
                 TurnsPlayed = turnCount,
                 HasCrashed = hasCrashed,
-                IsStalemate = isStalemate || turnCount >= maxTurns
+                IsStalemate = isStalemate
             }
         );
     }

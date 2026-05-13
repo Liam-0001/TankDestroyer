@@ -31,18 +31,11 @@
       overflow-x: hidden;
     }
 
-    /* Scanline overlay */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.08) 2px,
-        rgba(0,0,0,0.08) 4px
-      );
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
       pointer-events: none;
       z-index: 999;
     }
@@ -56,173 +49,70 @@
       gap: 16px;
     }
 
-    h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 2.4rem;
-      letter-spacing: 0.1em;
-      color: var(--accent);
-      text-shadow: 0 0 20px rgba(232,255,0,0.3);
-    }
-
+    h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 0.1em; color: var(--accent); text-shadow: 0 0 20px rgba(232,255,0,0.3); }
     h1 span { color: var(--accent2); }
 
     #status-badge {
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
-      padding: 4px 12px;
-      border-radius: 2px;
-      background: var(--surface);
-      border: 1px solid var(--muted);
-      color: var(--muted);
-      transition: all 0.3s;
+      font-size: 0.7rem; letter-spacing: 0.15em; padding: 4px 12px; border-radius: 2px;
+      background: var(--surface); border: 1px solid var(--muted); color: var(--muted); transition: all 0.3s;
     }
-
     #status-badge.connected { border-color: var(--win); color: var(--win); box-shadow: 0 0 8px rgba(57,255,20,0.2); }
     #status-badge.error { border-color: var(--loss); color: var(--loss); }
 
-    main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 40px 24px;
-      display: grid;
-      grid-template-rows: auto auto 1fr;
-      gap: 32px;
-    }
+    main { max-width: 1100px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-rows: auto auto 1fr; gap: 32px; }
 
     .control-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 24px;
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 16px;
-      align-items: end;
+      background: var(--surface); border: 1px solid var(--border); padding: 24px;
+      display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end;
     }
 
-    .field label {
-      display: block;
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
+    .field label { display: block; font-size: 0.65rem; letter-spacing: 0.2em; color: var(--muted); margin-bottom: 8px; }
     .field input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.9rem;
-      padding: 10px 14px;
-      outline: none;
-      transition: border-color 0.2s;
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; padding: 10px 14px; outline: none; transition: border-color 0.2s;
     }
-
     .field input:focus { border-color: var(--accent); }
     .field input::placeholder { color: var(--muted); }
 
     button#start-btn {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.15em;
-      padding: 11px 32px;
-      cursor: pointer;
-      transition: background 0.2s, box-shadow 0.2s;
-      white-space: nowrap;
+      background: var(--accent); color: #000; border: none; font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; letter-spacing: 0.15em; padding: 11px 32px; cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s; white-space: nowrap;
     }
-
     button#start-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(232,255,0,0.4); }
     button#start-btn:disabled { background: var(--muted); cursor: not-allowed; box-shadow: none; }
 
     .stats-section { display: none; flex-direction: column; gap: 16px; }
     .stats-section.visible { display: flex; }
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
-    }
+    .section-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.15em; color: var(--accent); }
+    #result-count { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
 
-    .section-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.2rem;
-      letter-spacing: 0.15em;
-      color: var(--accent);
-    }
-
-    #result-count {
-      font-size: 0.65rem;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    thead th {
-      font-size: 0.62rem;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      text-align: left;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
+    table { width: 100%; border-collapse: collapse; }
+    thead th { font-size: 0.62rem; letter-spacing: 0.2em; color: var(--muted); text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); }
     thead th.num { text-align: right; }
-
-    tbody tr {
-      border-bottom: 1px solid rgba(30,30,46,0.5);
-      transition: background 0.15s;
-      animation: rowIn 0.3s ease both;
-    }
-
+    tbody tr { border-bottom: 1px solid rgba(30,30,46,0.5); transition: background 0.15s; animation: rowIn 0.3s ease both; }
     tbody tr:hover { background: rgba(232,255,0,0.03); }
-
-    @keyframes rowIn {
-      from { opacity: 0; transform: translateX(-8px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    td {
-      padding: 10px 12px;
-      font-size: 0.85rem;
-    }
-
+    @keyframes rowIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+    td { padding: 10px 12px; font-size: 0.85rem; }
     td.num { text-align: right; }
     td.wins { color: var(--win); font-weight: bold; }
     td.losses { color: var(--loss); }
     td.stalemates { color: var(--stale); }
     td.crashes { color: var(--crash); }
-
     .bot-name { display: flex; align-items: center; gap: 10px; }
     .color-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
     .log-section { display: flex; flex-direction: column; gap: 12px; }
-
     #log {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 16px;
-      font-size: 0.72rem;
-      color: var(--muted);
-      height: 160px;
-      overflow-y: auto;
-      line-height: 1.7;
+      background: var(--surface); border: 1px solid var(--border); padding: 16px;
+      font-size: 0.72rem; color: var(--muted); height: 160px; overflow-y: auto; line-height: 1.7;
     }
-
     #log .entry { animation: fadeIn 0.2s ease; }
     #log .entry.ok { color: var(--win); }
     #log .entry.err { color: var(--loss); }
     #log .entry.info { color: var(--accent); }
-
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     ::-webkit-scrollbar { width: 4px; }
@@ -262,6 +152,7 @@
     <table>
       <thead>
         <tr>
+          <th>Creator</th>
           <th>BOT</th>
           <th>MAP</th>
           <th class="num">WINS</th>
@@ -284,7 +175,7 @@
   const statsSection = document.getElementById('stats-section');
   const resultCount = document.getElementById('result-count');
 
-  let resultRows = [];
+  let totalResults = 0;
 
   function addLog(msg, type = '') {
     const div = document.createElement('div');
@@ -294,52 +185,32 @@
     logEl.scrollTop = logEl.scrollHeight;
   }
 
-  // SignalR
   const connection = new signalR.HubConnectionBuilder()
     .withUrl(`${API_BASE}/battlehub`)
     .withAutomaticReconnect()
     .build();
 
   connection.on('ReceiveResult', (result) => {
-    resultRows.push(result);
-    resultCount.textContent = `${resultRows.length} results`;
+    totalResults++;
+    resultCount.textContent = `${totalResults} results`;
     statsSection.classList.add('visible');
     renderRow(result);
-    addLog(`Result: ${result.mapName} — ${result.botInfo?.map(b => b.name).join(' vs ')}`, '');
+    addLog(`${result.mapName} — ${result.botName}`, '');
   });
 
-  connection.onreconnecting(() => {
-    badge.textContent = 'RECONNECTING...';
-    badge.className = '';
-    addLog('Reconnecting...', 'err');
-  });
-
-  connection.onreconnected(() => {
-    badge.textContent = 'CONNECTED';
-    badge.className = 'connected';
-    addLog('Reconnected', 'ok');
-  });
+  connection.onreconnecting(() => { badge.textContent = 'RECONNECTING...'; badge.className = ''; addLog('Reconnecting...', 'err'); });
+  connection.onreconnected(() => { badge.textContent = 'CONNECTED'; badge.className = 'connected'; addLog('Reconnected', 'ok'); });
 
   connection.start()
-    .then(() => {
-      badge.textContent = 'CONNECTED';
-      badge.className = 'connected';
-      startBtn.disabled = false;
-      addLog('Connected to BattleHub', 'ok');
-    })
-    .catch(err => {
-      badge.textContent = 'ERROR';
-      badge.className = 'error';
-      addLog('Connection failed: ' + err, 'err');
-    });
+    .then(() => { badge.textContent = 'CONNECTED'; badge.className = 'connected'; startBtn.disabled = false; addLog('Connected to BattleHub', 'ok'); })
+    .catch(err => { badge.textContent = 'ERROR'; badge.className = 'error'; addLog('Connection failed: ' + err, 'err'); });
 
-  // Start battle
   startBtn.addEventListener('click', async () => {
     const mapName = document.getElementById('map-input').value.trim();
     const maxTurns = parseInt(document.getElementById('turns-input').value) || 200;
 
     startBtn.disabled = true;
-    resultRows = [];
+    totalResults = 0;
     resultsBody.innerHTML = '';
     resultCount.textContent = '0 results';
 
@@ -349,7 +220,6 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mapName: mapName || null, maxTurns })
       });
-
       if (res.ok) {
         addLog(`Battle gestart — MaxTurns: ${maxTurns}${mapName ? ', Map: ' + mapName : ', alle maps'}`, 'info');
       } else {
@@ -364,41 +234,29 @@
   });
 
   function renderRow(result) {
-    const survivors = result.bots?.filter(t => !t.destroyed) ?? [];
-    const isStalemate = result.isStalemate;
+    const rowKey = `${result.botName}||${result.mapName}`;
+    const existingRow = document.querySelector(`tr[data-key="${CSS.escape(rowKey)}"]`);
 
-    (result.botInfo ?? []).forEach(bot => {
-      const tank = result.bots?.find(t => t.ownerId === bot.ownerId);
-      let wins = 0, losses = 0, stalemates = 0, crashes = 0;
-
-      if (result.hasCrashed) { crashes++; losses++; }
-      else if (result.bots?.every(b => b.destroyed)) { /* draw */ }
-      else if (isStalemate && tank && !tank.destroyed) stalemates++;
-      else if (survivors.length === 1 && survivors[0].ownerId === bot.ownerId) wins++;
-      else losses++;
-
-      // Check if row exists
-      const existingRow = document.querySelector(`tr[data-bot="${CSS.escape(bot.name)}"]`);
-      if (existingRow) {
-        existingRow.querySelector('.w').textContent = parseInt(existingRow.querySelector('.w').textContent) + wins;
-        existingRow.querySelector('.l').textContent = parseInt(existingRow.querySelector('.l').textContent) + losses;
-        existingRow.querySelector('.s').textContent = parseInt(existingRow.querySelector('.s').textContent) + stalemates;
-        existingRow.querySelector('.c').textContent = parseInt(existingRow.querySelector('.c').textContent) + crashes;
-      } else {
-        const color = bot.color?.startsWith('#') ? bot.color : `#${bot.color ?? '888'}`;
-        const tr = document.createElement('tr');
-        tr.dataset.bot = bot.name;
-        tr.innerHTML = `
-          <td><div class="bot-name"><span class="color-dot" style="background:${color}"></span>${bot.name}</div></td>
-          <td>${result.mapName ?? '—'}</td>
-          <td class="num wins w">${wins}</td>
-          <td class="num losses l">${losses}</td>
-          <td class="num stalemates s">${stalemates}</td>
-          <td class="num crashes c">${crashes}</td>
-        `;
-        resultsBody.appendChild(tr);
-      }
-    });
+    if (existingRow) {
+      // Backend stuurt gecumuleerde totalen, dus gewoon overschrijven
+      existingRow.querySelector('.w').textContent = result.wins;
+      existingRow.querySelector('.l').textContent = result.losses;
+      existingRow.querySelector('.s').textContent = result.stalemates;
+      existingRow.querySelector('.c').textContent = result.crashes;
+    } else {
+      const tr = document.createElement('tr');
+      tr.dataset.key = rowKey;
+      tr.innerHTML = `
+        <td><div class="bot-name">${result.creator}</div></td>
+        <td><div class="bot-name">${result.botName}</div></td>
+        <td>${result.mapName}</td>
+        <td class="num wins w">${result.wins}</td>
+        <td class="num losses l">${result.losses}</td>
+        <td class="num stalemates s">${result.stalemates}</td>
+        <td class="num crashes c">${result.crashes}</td>
+      `;
+      resultsBody.appendChild(tr);
+    }
   }
 </script>
 </body>

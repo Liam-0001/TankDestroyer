@@ -1,20 +1,17 @@
 using System.Threading.Channels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using TankDestroyer.AutoBattler.API.Dto;
-using TankDestroyer.AutoBattler.API.Hubs;
 using TankDestroyer.AutoBattler.Configuration;
 using TankDestroyer.AutoBattler.Objects;
 using TankDestroyer.Engine;
 using Game = TankDestroyer.AutoBattler.Objects.Game;
 
 namespace TankDestroyer.AutoBattler.API.Controllers;
+
 [ApiController]
 [Route("api/[controller]")]
 public class BattleController(
     ChannelWriter<BattleRequest> battleRequestWriter,
-    ChannelReader<GameResult> gameResultReader,
-    IHubContext<BattleHub> hubContext,
     Type[] botTypes,
     World[] maps
 ) : ControllerBase
@@ -36,7 +33,7 @@ public class BattleController(
         var games = selectedMaps
             .SelectMany(map => botGroups, (map, group) => new Game
             {
-                Map = map,
+                Map = map, 
                 BotTypes = group
             }).ToList();
 
@@ -45,15 +42,7 @@ public class BattleController(
             MaxTurns = request.Amount,
             Games = games
         });
-
-        _ = Task.Run(async () =>
-        {
-            await foreach (var result in gameResultReader.ReadAllAsync())
-            {
-                await hubContext.Clients.All.SendAsync("ReceiveResult", result);
-            }
-        });
-
+        
         return Accepted();
     }
 }
