@@ -1,22 +1,25 @@
 using System.Collections.Concurrent;
 using System.Text;
 using System.Threading.Channels;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Spectre.Console;
+using TankDestroyer.AutoBattler.Console.Configuration;
 using TankDestroyer.AutoBattler.Objects;
 using TankDestroyer.AutoBattler.Services;
 using TankDestroyer.Engine.Services.Instantiate;
 
 namespace TankDestroyer.AutoBattler.Console;
 
-public class App : IApp
+public class App(
+    ChannelWriter<BattleRequest> battleRequestWriter,
+    ChannelReader<GameResult> gameResultReader,
+    IHostApplicationLifetime lifetime,
+    BattleConfiguration battleConfiguration
+) : IApp
 {
-    public const int MaxTurnsForStaleMate = 200;
-    public static ConcurrentBag<GameResult> GameResults = [];
+    private static readonly ConcurrentBag<GameResult> GameResults = [];
     private static readonly TextWriter OriginalOut = System.Console.Out;
-    
-    
+
     public async Task RunAsync()
     {
         System.Console.OutputEncoding = Encoding.UTF8;
@@ -25,7 +28,7 @@ public class App : IApp
         try
         {
             AnsiConsole.Clear();
-            AnsiConsole.MarkupLine($"[blue]Loading application[/]");
+            AnsiConsole.MarkupLine("[blue]Loading application[/]");
 
             var botFolder = ResolvePath("..\\Build\\Bots", "..\\Bots");
             var mapFolder = ResolvePath("..\\Maps", "..\\Maps");
@@ -52,7 +55,6 @@ public class App : IApp
 
             var mapService = new CollectMapsService();
             var maps = mapService.LoadMaps(mapFolder);
-
             if (maps.Length == 0)
             {
                 AnsiConsole.MarkupLine($"[red]No maps found in:[/] {mapFolder}");
@@ -62,35 +64,10 @@ public class App : IApp
             var botGroups = botTypes.SelectMany(x => botTypes.Where(y => y != x), (x, y) => new[] { x, y }).ToList();
             var games = maps.SelectMany(map => botGroups, (map, group) => new { Map = map, BotTypes = group }).ToList();
 
-            // Channels aanmaken VOOR de host
-            var battleRequestChannel = Channel.CreateBounded<BattleRequest>(new BoundedChannelOptions(100)
+            var visibleConsole = AnsiConsole.Create(new AnsiConsoleSettings
             {
-                FullMode = BoundedChannelFullMode.Wait
+                Out = new AnsiConsoleOutput(OriginalOut)
             });
-            var gameResultChannel = Channel.CreateUnbounded<GameResult>();
-
-            var host = Host.CreateDefaultBuilder()
-                .ConfigureServices(services =>
-                {
-                    // Dezelfde channel instances meegeven aan DI
-                    services.AddSingleton(battleRequestChannel.Reader);
-                    services.AddSingleton(gameResultChannel.Writer);
-
-                    // botTypes en maps meegeven zodat BattleService ze krijgt
-                    services.AddSingleton(botTypes);
-                    services.AddSingleton(maps);
-
-                    services.AddHostedService<BattleService>();
-                })
-                .Build();
-
-            await host.StartAsync();
-
-            var visibleConsole =
-                AnsiConsole.Create(new AnsiConsoleSettings
-                {
-                    Out = new AnsiConsoleOutput(OriginalOut)
-                });
             System.Console.SetOut(TextWriter.Null);
             var sw = System.Diagnostics.Stopwatch.StartNew();
 
@@ -110,16 +87,16 @@ public class App : IApp
                     var progressTask = ctx.AddTask("[green]Simulating Games[/]", true, games.Count);
                     var resultConsumer = Task.Run(async () =>
                     {
-                        await foreach (var result in gameResultChannel.Reader.ReadAllAsync())
+                        await foreach (var result in gameResultReader.ReadAllAsync())
                         {
                             GameResults.Add(result);
                             progressTask.Increment(1);
                         }
                     });
 
-                    await battleRequestChannel.Writer.WriteAsync(new BattleRequest
+                    await battleRequestWriter.WriteAsync(new BattleRequest
                     {
-                        MaxTurns = MaxTurnsForStaleMate,
+                        MaxTurns = battleConfiguration.MaxTurnsForStaleMate,
                         Games = games.Select(g => new Game
                         {
                             Map = g.Map,
@@ -127,10 +104,9 @@ public class App : IApp
                         }).ToList()
                     });
 
-                    battleRequestChannel.Writer.Complete();
+                    battleRequestWriter.Complete();
                     await resultConsumer;
-
-                    await host.StopAsync();
+                    lifetime.StopApplication();
                 });
 
             sw.Stop();
