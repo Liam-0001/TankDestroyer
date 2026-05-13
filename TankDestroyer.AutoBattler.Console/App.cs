@@ -5,8 +5,9 @@ using Microsoft.Extensions.Hosting;
 using Spectre.Console;
 using TankDestroyer.AutoBattler.Console.Configuration;
 using TankDestroyer.AutoBattler.Objects;
-using TankDestroyer.AutoBattler.Services;
+using TankDestroyer.Engine;
 using TankDestroyer.Engine.Services.Instantiate;
+using Game = TankDestroyer.AutoBattler.Objects.Game;
 
 namespace TankDestroyer.AutoBattler.Console;
 
@@ -14,7 +15,9 @@ public class App(
     ChannelWriter<BattleRequest> battleRequestWriter,
     ChannelReader<GameResult> gameResultReader,
     IHostApplicationLifetime lifetime,
-    BattleConfiguration battleConfiguration
+    BattleConfiguration battleConfiguration,
+    Type[] botTypes,
+    World[] maps
 ) : IApp
 {
     private static readonly ConcurrentBag<GameResult> GameResults = [];
@@ -29,37 +32,6 @@ public class App(
         {
             AnsiConsole.Clear();
             AnsiConsole.MarkupLine("[blue]Loading application[/]");
-
-            var botFolder = ResolvePath("..\\Build\\Bots", "..\\Bots");
-            var mapFolder = ResolvePath("..\\Maps", "..\\Maps");
-
-            if (!Directory.Exists(botFolder))
-            {
-                AnsiConsole.MarkupLine($"[red]Bot folder not found:[/] {botFolder}");
-                return;
-            }
-
-            if (!Directory.Exists(mapFolder))
-            {
-                AnsiConsole.MarkupLine($"[red]Map folder not found:[/] {mapFolder}");
-                return;
-            }
-
-            var botService = new CollectBotsService();
-            var botTypes = botService.LoadBots(botFolder);
-            if (botTypes.Length == 0)
-            {
-                AnsiConsole.MarkupLine($"[red]No bots found in:[/] {botFolder}");
-                return;
-            }
-
-            var mapService = new CollectMapsService();
-            var maps = mapService.LoadMaps(mapFolder);
-            if (maps.Length == 0)
-            {
-                AnsiConsole.MarkupLine($"[red]No maps found in:[/] {mapFolder}");
-                return;
-            }
 
             var botGroups = botTypes.SelectMany(x => botTypes.Where(y => y != x), (x, y) => new[] { x, y }).ToList();
             var games = maps.SelectMany(map => botGroups, (map, group) => new { Map = map, BotTypes = group }).ToList();
@@ -117,7 +89,7 @@ public class App(
             AnsiConsole.MarkupLine($"[yellow]Total stalemates:[/] {totalStalemates}");
 
             var renderer = new ResultRenderer();
-            renderer.PrintResults(GameResults);
+            renderer.PrintResults(GameResults.ToList());
 
             AnsiConsole.MarkupLine("[bold green]Game Finished![/]");
         }
