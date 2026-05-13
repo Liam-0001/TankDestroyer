@@ -36,7 +36,7 @@ public class JODMOBot : IPlayerBot
         }
         if (turnContext.Tank.EnemyInLineOfSight(turnContext.GetTile(turnContext.Tank.X, turnContext.Tank.Y), enemyTanks.First(), turnContext))
         {
-            Console.WriteLine("In line of sight");
+           // Console.WriteLine("In line of sight");
             turnContext.RotateTurret(TurretDirectionService.CalculateTurretDirection(nearestTank, turnContext.Tank));
 
             turnContext.Fire();

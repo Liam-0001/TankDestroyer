@@ -46,7 +46,7 @@ public class VanguardBot : IPlayerBot
         bool attackMode = _turnsWithoutProgress >= 30 || healthLost;
 
         var bestMove = ChooseMove(turnContext, current, enemies, attackMode);
-        Console.WriteLine($"Vanguard: Moving to ({bestMove.Position.X},{bestMove.Position.Y}) from ({current.X},{current.Y}) attackMode={attackMode}");
+       // Console.WriteLine($"Vanguard: Moving to ({bestMove.Position.X},{bestMove.Position.Y}) from ({current.X},{current.Y}) attackMode={attackMode}");
         if (bestMove.Direction.HasValue)
         {
             turnContext.MoveTank(bestMove.Direction.Value);
@@ -56,7 +56,7 @@ public class VanguardBot : IPlayerBot
         var shot = ChooseShot(turnContext, firingPosition, enemies, attackMode);
         if (shot.HasValue)
         {
-            Console.WriteLine($"Vanguard: Shooting at {shot.Value}");
+           // Console.WriteLine($"Vanguard: Shooting at {shot.Value}");
             turnContext.RotateTurret(shot.Value);
             turnContext.Fire();
             hasProgress = true;
@@ -68,7 +68,7 @@ public class VanguardBot : IPlayerBot
                 .First();
 
             var turretDir = DirectionTo(firingPosition, new Position(nearest.X, nearest.Y));
-            Console.WriteLine($"Vanguard: Rotating turret to {turretDir} towards nearest enemy");
+           // Console.WriteLine($"Vanguard: Rotating turret to {turretDir} towards nearest enemy");
             turnContext.RotateTurret(turretDir);
         }
 
@@ -85,7 +85,7 @@ public class VanguardBot : IPlayerBot
         _lastNearestDistance = newNearestDistance;
         _lastHealth = me.Health;
 
-        Console.WriteLine($"Vanguard: Turns without progress: {_turnsWithoutProgress}");
+       // Console.WriteLine($"Vanguard: Turns without progress: {_turnsWithoutProgress}");
     }
 
     private MoveChoice ChooseMove(ITurnContext turnContext, Position current, ITank[] enemies, bool attackMode)

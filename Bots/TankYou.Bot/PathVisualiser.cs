@@ -32,9 +32,9 @@ internal static class PathVisualiser
 
                 if (tank != null)
                 {
-                    Console.ForegroundColor = tank.OwnerId == context.Tank.OwnerId
+                 /*  // Console.ForegroundColor = tank.OwnerId == context.Tank.OwnerId
                         ? ConsoleColor.Green
-                        : ConsoleColor.Red;
+                        : ConsoleColor.Red;*/
 
                     Write2(GetTankArrow(tank.TurretDirection));
                     continue;
@@ -42,14 +42,14 @@ internal static class PathVisualiser
 
                 if (bullet != null)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
+                  // // Console.ForegroundColor = ConsoleColor.Yellow;
                     Write2(GetBulletChar(bullet.Direction));
                     continue;
                 }
 
                 if (isUnsafePath)
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
+              //     // Console.ForegroundColor = ConsoleColor.DarkRed;
 
                     Write2('!');
                     continue;
@@ -57,14 +57,14 @@ internal static class PathVisualiser
 
                 if (isPath)
                 {
-                    Console.ForegroundColor = ConsoleColor.Cyan;
+                //   // Console.ForegroundColor = ConsoleColor.Cyan;
                     Write2('*');
                     continue;
                 }
 
                 if (isDanger)
                 {
-                    Console.ForegroundColor = ConsoleColor.Magenta;
+              //     // Console.ForegroundColor = ConsoleColor.Magenta;
                     Write2('x');
                     continue;
                 }
@@ -72,18 +72,18 @@ internal static class PathVisualiser
                 PrintTile(context, x, y);
             }
 
-            Console.WriteLine();
+       //    // Console.WriteLine();
         }
 
-        Console.ResetColor();
-        Console.WriteLine();
+   /*    // Console.ResetColor();
+       // Console.WriteLine();*/
     }
 
     private static void Write2(char c)
     {
-        Console.Write(c);
-        Console.Write(' ');
-        Console.ResetColor();
+    /*   // Console.Write(c);
+       // Console.Write(' ');
+       // Console.ResetColor();*/
     }
 
     private static void PrintTile(ITurnContext context, int x, int y)
@@ -91,27 +91,27 @@ internal static class PathVisualiser
         switch (context.GetTile(x, y).TileType)
         {
             case TileType.Grass:
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Write2('.');
+         //      // Console.ForegroundColor = ConsoleColor.DarkGray;
+           //     Write2('.');
                 break;
 
             case TileType.Sand:
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
+           //    // Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Write2(',');
                 break;
 
             case TileType.Tree:
-                Console.ForegroundColor = ConsoleColor.DarkGreen;
+          //     // Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Write2('T');
                 break;
 
             case TileType.Building:
-                Console.ForegroundColor = ConsoleColor.Gray;
+             //  // Console.ForegroundColor = ConsoleColor.Gray;
                 Write2('^');
                 break;
 
             case TileType.Water:
-                Console.ForegroundColor = ConsoleColor.DarkBlue;
+          //     // Console.ForegroundColor = ConsoleColor.DarkBlue;
                 Write2('#');
                 break;
 

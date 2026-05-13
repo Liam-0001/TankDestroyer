@@ -53,8 +53,10 @@ public class HunterBot : IPlayerBot
         var dy = next.Y - start.Y;
 
         var direction = GetDirectionFromDelta(dx, dy);
-
-        context.MoveTank(direction);
+        if (direction.HasValue)
+        {
+            context.MoveTank(direction.Value);
+        }
     }
 
     private List<Coordinate> FindPath(ITurnContext context, Coordinate start, Coordinate target)
@@ -143,13 +145,13 @@ public class HunterBot : IPlayerBot
         return path;
     }
 
-    private static Direction GetDirectionFromDelta(int dx, int dy) => (dx, dy) switch
+    private static Direction? GetDirectionFromDelta(int dx, int dy) => (dx, dy) switch
     {
         (1, _) => Direction.West,
         (-1, _) => Direction.East,
         (_, 1) => Direction.North,
         (_, -1) => Direction.South,
-        _ => throw new Exception("Invalid movement delta"),
+        _ => null,
     };
 
     private void RotateToDirectionOfTankToChase(ITurnContext context)

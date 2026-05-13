@@ -34,8 +34,12 @@ public class TankYouBot : IPlayerBot
             var enemies = turnContext.GetTanks()
               .Where(t => t.OwnerId != turnContext.Tank.OwnerId && !t.Destroyed)
               .ToList();
-            enemies.Sort((t1, t2) => Math.Sqrt(Math.Pow(t1.X - x, 2) + Math.Pow(t1.Y - y, 2)).CompareTo(
-                Math.Sqrt(Math.Pow(t2.X - x, 2) + Math.Pow(t2.Y - y, 2))));
+            enemies.Sort((t1, t2) =>
+            {
+                var d1 = (t1.X - x) * (t1.X - x) + (t1.Y - y) * (t1.Y - y);
+                var d2 = (t2.X - x) * (t2.X - x) + (t2.Y - y) * (t2.Y - y);
+                return d1.CompareTo(d2);
+            });
 
             if (enemies.Count == 0)
             {
@@ -156,17 +160,10 @@ internal static class ITurnContextExtensions
 
     public static bool ValidTile(this ITurnContext context, int x, int y)
     {
-        try
-        {
-
-            return context.GetTile(x, y).Valid()
-                && context.GetMapHeight() > y && y >= 0
-                && context.GetMapWidth() > x && x >= 0;
-        }
-        catch
-        {
+        if (x < 0 || y < 0 || x >= context.GetMapWidth() || y >= context.GetMapHeight())
             return false;
-        }
+
+        return context.GetTile(x, y).Valid();
     }
 }
 
@@ -183,31 +180,49 @@ internal class Locator
     public static bool WillCollide((int x, int y) position, IBullet bullet, ITurnContext context, int turn)
     {
         var (dx, dy) = GetVector(bullet.Direction);
-        int speed = IsDiagonal(dx, dy) ? BulletDiagonalSpeed : BulletStraightSpeed;
+        int dx_pos = position.x - bullet.X;
+        int dy_pos = position.y - bullet.Y;
 
-        int startStep = turn * speed;
-        int endStep = (turn + 1) * speed;
+        int steps;
+        if (dx != 0)
+        {
+            if (dx_pos % dx != 0) return false;
+            steps = dx_pos / dx;
+            if (dy != 0 && steps * dy != dy_pos) return false;
+            if (dy == 0 && dy_pos != 0) return false;
+        }
+        else
+        {
+            if (dx_pos != 0) return false;
+            if (dy == 0) return false;
+            if (dy_pos % dy != 0) return false;
+            steps = dy_pos / dy;
+        }
+
+        if (steps <= 0) return false;
+
+        int speed = IsDiagonal(dx, dy) ? BulletDiagonalSpeed : BulletStraightSpeed;
+        if (steps <= turn * speed || steps > (turn + 1) * speed) return false;
 
         int bx = bullet.X;
         int by = bullet.Y;
+        int width = context.GetMapWidth();
+        int height = context.GetMapHeight();
 
-        for (int i = 0; i < endStep; i++)
+        for (int i = 1; i <= steps; i++)
         {
             bx += dx;
             by += dy;
 
-            if (bx < 0 || by < 0 || bx >= context.GetMapWidth() || by >= context.GetMapHeight())
+            if (bx < 0 || by < 0 || bx >= width || by >= height)
                 return false;
 
             var tile = context.GetTile(bx, by).TileType;
             if (tile == TileType.Tree || tile == TileType.Building)
                 return false;
-
-            if (i >= startStep && (bx, by) == position)
-                return true;
         }
 
-        return false;
+        return true;
     }
 
     private static (int dx, int dy) GetVector(TurretDirection dir) => dir switch

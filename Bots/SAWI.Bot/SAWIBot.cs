@@ -191,7 +191,7 @@ public class ExampleBot : IPlayerBot
 
         if(xDistance == yDistance)
         {
-            Console.WriteLine("2 Tanks, 1 Tile");
+           // Console.WriteLine("2 Tanks, 1 Tile");
             return Adjusted(TurretDirection.South);
         }
         return Adjusted(TurretDirection.South);
