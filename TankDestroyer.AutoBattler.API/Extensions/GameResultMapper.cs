@@ -19,10 +19,19 @@ public static class GameResultMapper
             if (result.HasCrashed)
             {
                 crashes++;
+                losses++;
             }
-            else if (result.Bots.All(b => b.Destroyed) || result.IsStalemate && tank != null && !tankDead)
+            else if (result.Bots.All(b => b.Destroyed))
             {
-                stalemates++;
+                // iedereen dood tegelijk = draw, niks optellen
+            }
+            else if (result.IsStalemate)
+            {
+                // bij stalemate: nog levende tanks krijgen stalemate, dode tanks krijgen loss
+                if (tank != null && !tankDead)
+                    stalemates++;
+                else
+                    losses++;
             }
             else if (survivors.Count == 1 && survivors[0].OwnerId == bot.OwnerId)
             {

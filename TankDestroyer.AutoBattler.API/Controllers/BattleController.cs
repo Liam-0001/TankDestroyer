@@ -33,16 +33,16 @@ public class BattleController(
         var games = selectedMaps
             .SelectMany(map => botGroups, (map, group) => new Game
             {
-                Map = map, 
+                Map = map,
                 BotTypes = group
             }).ToList();
 
         await battleRequestWriter.WriteAsync(new BattleRequest
         {
-            MaxTurns = request.Amount,
+            MaxTurns = request.MaxTurns,
             Games = games
         });
-        
+
         return Accepted();
     }
 }

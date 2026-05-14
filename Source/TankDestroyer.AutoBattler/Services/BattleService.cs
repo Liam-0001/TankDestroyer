@@ -82,8 +82,7 @@ public class BattleService(
                     });
             }
         );
-
-        _gameResultChannelWriter.Complete();
+        // Geen Complete() hier zodat de channel open blijft voor meerdere battles
     }
 
     private async Task RunGame(IPlayerBot[] bots, World selectedMap, BotInfo[] botInfos, int maxTurns)
@@ -101,7 +100,8 @@ public class BattleService(
             hasCrashed = true;
         }
 
-        var finalTanks = runner.GetTanks().ToList();
+        var lastTurn = runner.GetTurns().Last();
+        var finalTanks = lastTurn.Tanks.ToList();
         var isStalemate = !hasCrashed && turnCount >= maxTurns;
 
         await _gameResultChannelWriter.WriteAsync(

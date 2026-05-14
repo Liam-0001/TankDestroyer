@@ -18,20 +18,32 @@ public class BattleResultService(
     {
         await foreach (var result in gameResultReader.ReadAllAsync(stoppingToken))
         {
-            var dtos = GameResultMapper.ToDto(result);
-
-            foreach (var dto in dtos)
+            try
             {
-                var key = $"{dto.BotName}||{dto.MapName}";
+                var dtos = GameResultMapper.ToDto(result);
 
-                var updatedDto = _totals.AddOrUpdate(key, dto, (k, existing) => existing with
+                foreach (var dto in dtos)
                 {
-                    Wins = existing.Wins + dto.Wins,
-                    Losses = existing.Losses + dto.Losses,
-                    Stalemates = existing.Stalemates + dto.Stalemates
-                });
-                
-                await hubContext.Clients.All.SendAsync("ReceiveResult", updatedDto, stoppingToken);
+                    var key = $"{dto.BotName}||{dto.MapName}";
+
+                    var updatedDto = _totals.AddOrUpdate(key, dto, (k, existing) => existing with
+                    {
+                        Wins       = existing.Wins       + dto.Wins,
+                        Losses     = existing.Losses     + dto.Losses,
+                        Stalemates = existing.Stalemates + dto.Stalemates,
+                        Crashes    = existing.Crashes    + dto.Crashes
+                    });
+
+                    await hubContext.Clients.All.SendAsync("ReceiveResult", updatedDto, stoppingToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (ChannelClosedException)
+            {
+                break;
             }
         }
     }
