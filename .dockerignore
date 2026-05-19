@@ -1,0 +1,7 @@
+**/.git
+**/.vs
+**/bin
+**/obj
+**/.godot
+battle-viewer-react-app/node_modules
+battle-viewer-react-app/build

@@ -9,7 +9,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Source\TankDestroyer.AutoBattler\TankDestroyer.AutoBattler.csproj" />
-      <ProjectReference Include="..\TankDestroyer.AutoBattler\TankDestroyer.AutoBattler.csproj" />
     </ItemGroup>
 
 </Project>

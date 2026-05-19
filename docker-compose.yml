@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Docker/AutoBattler/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - tankdestroyer
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Docker/Frontend/Dockerfile
+    ports:
+      - "3000:80"
+    networks:
+      - tankdestroyer
+    depends_on:
+      - backend
+
+networks:
+  tankdestroyer:
+    driver: bridge
