@@ -21,7 +21,7 @@ public class BattleController(
     {
         var selectedMaps = string.IsNullOrWhiteSpace(request.MapName)
             ? maps
-            : maps.Where(m => m.Name == request.MapName).ToArray();
+            : maps.Where(m => m.Name.Contains(request.MapName, StringComparison.OrdinalIgnoreCase)).ToArray();
 
         if (!selectedMaps.Any())
             return NotFound($"Map '{request.MapName}' not found.");
