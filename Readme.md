@@ -64,3 +64,14 @@ Maak je eigen bot en maak een PR naar de hoofdtak.
 - Kogels zijn gelimiteert tot 10, als deze op zijn zal er niet meer geschoten worden
 - Als het gemiddelde aantal kogels onder 5 zakt zal er ammo gespawnt worden beginnende bij de speler die het verste weg is van ammo
 - Ammo word gespawnt op een tile die volledig vrij is in het open
+
+## Docker
+
+> **opgelet!** je hebt hier Docker desktop voor nodig
+
+De battler kan gesimuleert worden via docker door het volgende comando uit te voeren
+```bash
+docker compose down --rmi all --volumes --remove-orphans; docker compose up --build
+```
+
+wanneer deze aan het lopen is ga je naar http://localhost:3000 en kan je de battler zelf runnen
