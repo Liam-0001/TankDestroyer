@@ -5,7 +5,7 @@ import {BattleRequest} from "../Objects/BattleRequest";
 interface SettingInputProps {
     numberUntilStalemate: number;
     mapName: string;
-    submit: (request:BattleRequest) => void;
+    submit: (request: BattleRequest) => void;
 }
 
 export default function SettingInput({ numberUntilStalemate, mapName, submit }: SettingInputProps) {
@@ -26,12 +26,10 @@ export default function SettingInput({ numberUntilStalemate, mapName, submit }: 
                 value={turnsValue}
                 onChange={(e) => setTurnsValue(Number(e.target.value))}
             />
-            <Button onClick={() => submit(
-                {
-                    maxTurns: turnsValue,
-                    mapName: mapNameValue
-                }
-            )}>Submit</Button>
+            <Button onClick={() => {
+                console.log("submit clicked", { maxTurns: turnsValue, mapName: mapNameValue });
+                submit({ maxTurns: turnsValue, mapName: mapNameValue });
+            }}>Submit</Button>
         </Box>
     );
 }

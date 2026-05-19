@@ -1,6 +1,6 @@
 import {ReactNode} from "react";
 import {
-    Box, Divider, Paper, styled, TableBody, TableCell,
+    Box, Divider, Paper, styled, Table, TableBody, TableCell,
     tableCellClasses, TableContainer, TableHead, TableRow, Typography
 } from "@mui/material";
 import {GameResult} from "../Objects/GameResult";
@@ -41,32 +41,35 @@ export default function DataModule({name, results}: SortModuleInterface) {
             <Divider sx={{ width: '100%' }} />
 <br/>
             <TableContainer component={Paper} sx={{ maxWidth: 800 }}>
-                <TableHead>
-                    <TableRow>
-                        <StyledTableCell>Player</StyledTableCell>
-                        <StyledTableCell>Botname</StyledTableCell>
-                        <StyledTableCell>Map</StyledTableCell>
-                        <StyledTableCell align="right">Wins</StyledTableCell>
-                        <StyledTableCell align="right">Losses</StyledTableCell>
-                        <StyledTableCell align="right">Stalemates</StyledTableCell>
-                        <StyledTableCell align="right">Crashes</StyledTableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {results.map((row) => (
-                        <StyledTableRow key={`${row.creator}-${row.botName}`}>
-                            <StyledTableCell component="th" scope="row">
-                                {row.creator}
-                            </StyledTableCell>
-                            <StyledTableCell>{row.botName}</StyledTableCell>
-                            <StyledTableCell>{row.mapName}</StyledTableCell>
-                            <StyledTableCell align="right">{row.wins}</StyledTableCell>
-                            <StyledTableCell align="right">{row.losses}</StyledTableCell>
-                            <StyledTableCell align="right">{row.stalemates}</StyledTableCell>
-                            <StyledTableCell align="right">{row.crashes}</StyledTableCell>
-                        </StyledTableRow>
-                    ))}
-                </TableBody>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <StyledTableCell>Player</StyledTableCell>
+                            <StyledTableCell>Botname</StyledTableCell>
+                            <StyledTableCell>Map</StyledTableCell>
+                            <StyledTableCell align="right">Wins</StyledTableCell>
+                            <StyledTableCell align="right">Losses</StyledTableCell>
+                            <StyledTableCell align="right">Stalemates</StyledTableCell>
+                            <StyledTableCell align="right">Crashes</StyledTableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {results.map((row) => (
+                            <StyledTableRow key={`${row.creator}-${row.botName}`}>
+                                <StyledTableCell component="th" scope="row">
+                                    {row.creator}
+                                </StyledTableCell>
+                                <StyledTableCell>{row.botName}</StyledTableCell>
+                                <StyledTableCell>{row.mapName}</StyledTableCell>
+                                <StyledTableCell align="right">{row.wins}</StyledTableCell>
+                                <StyledTableCell align="right">{row.losses}</StyledTableCell>
+                                <StyledTableCell align="right">{row.stalemates}</StyledTableCell>
+                                <StyledTableCell align="right">{row.crashes}</StyledTableCell>
+                            </StyledTableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+
             </TableContainer>
         </Box>
     )

@@ -6,7 +6,7 @@ using TankDestroyer.Engine.Services.Instantiate;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var botFolder = ResolvePath("Bots"); 
+var botFolder = ResolvePath("Bots");
 var mapFolder = ResolvePath("Maps");
 
 var botTypes = new CollectBotsService().LoadBots(botFolder);
@@ -28,7 +28,7 @@ builder.Services.AddBattleInfrastructure(botTypes, maps);
 
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(p =>
-        p.WithOrigins("http://localhost:63342")
+        p.SetIsOriginAllowed(_ => true)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()));
@@ -54,7 +54,7 @@ static string ResolvePath(string folderName)
 {
     // De map waar de .exe staat (D:\Desktop\bot\Build\)
     var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-    
+
     // We kijken eerst direct in de build map
     var path = Path.Combine(baseDir, folderName);
 
