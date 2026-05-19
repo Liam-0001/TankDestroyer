@@ -5,7 +5,7 @@ import { values } from "../Values";
 export function useBattle() {
     const { mutateAsync: battle, isPending, isError } = useMutation({
         mutationFn: async (request: BattleRequest) => {
-            await fetch(`${values.Address}/api/battle`, {
+            await fetch(`/api/battle`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(request),

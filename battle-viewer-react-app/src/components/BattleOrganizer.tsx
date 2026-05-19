@@ -1,24 +1,11 @@
-import { useState } from "react";
-import {Box, FormControl, InputLabel, Select, MenuItem, Grid} from "@mui/material";
+import { Stack} from "@mui/material";
 import {GameResult} from "../Objects/GameResult";
 import DataModule from "./DataModule";
-import GroupByOption from "./GroupByOption";
 import TotalsDataModule from "./TotalsDataModule";
 
-type GroupBy = "creator" | "botName" | "mapName";
+export type GroupBy = "creator" | "botName" | "mapName";
 
-export default function BattleOrganizer({ results }: { results: GameResult[] }) {
-    const [groupByValue, setgroupByValue] = useState<GroupBy>("mapName");
-
-    const grouped = results.reduce((acc, result) => {
-        const key = result[groupByValue];
-        acc[key] ??= [];
-        acc[key].push(result);
-        return acc;
-    }, {} as Record<string, GameResult[]>);
-
-
-
+export default function BattleOrganizer({ results, groupedBy }: { results: GameResult[], groupedBy: GroupBy }) {
     const cumulativeByCreatorBot = Object.values(
         results.reduce((acc, result) => {
             const key = `${result.creator}-${result.botName}`;
@@ -33,22 +20,21 @@ export default function BattleOrganizer({ results }: { results: GameResult[] }) 
         }, {} as Record<string, GameResult>)
     ).sort((a, b) => b.wins - a.wins);
 
+    const grouped = Object.entries(
+        results.reduce((acc, result) => {
+            const key = result[groupedBy];
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(result);
+            return acc;
+        }, {} as Record<string, GameResult[]>)
+    ).sort(([a], [b]) => a.localeCompare(b));
+
     return (
-        <Grid container spacing={2}>
-            <Grid size={{ xs: 6, md: 10}}>
-
-                <TotalsDataModule name={"Totals"} results={cumulativeByCreatorBot}/>
-
-                {Object.entries(grouped).map(([key, groupResults]) => (
-                    <DataModule key={key} name={key} results={groupResults} />
-                ))}
-            </Grid>
-
-            <Grid size={{ xs: 6, md: 2 }}>
-                <GroupByOption selected={ groupByValue} onChange={(value)=>setgroupByValue(value as GroupBy)} />
-
-            </Grid>
-        </Grid>
-
+        <Stack spacing={2}  sx={{ width: "100%", px: 2, alignItems:"center" }}>
+            <TotalsDataModule name={"Totals"} results={cumulativeByCreatorBot}/>
+            {grouped.map(([groupKey, groupResults]) => (
+                <DataModule key={groupKey} name={groupKey} results={groupResults}/>
+            ))}
+        </Stack>
     );
 }
